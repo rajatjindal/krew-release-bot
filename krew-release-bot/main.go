@@ -36,7 +36,7 @@ func main() {
 	log.Fatal(s.ListenAndServe())
 }
 
-const credentialsFile = "/var/openfaas/secrets/krew-plugin-release-bot.yaml"
+const credentialsFile = "/var/openfaas/secrets/krew-release-bot.yaml"
 
 var realAction actions.RealAction
 
