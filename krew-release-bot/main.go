@@ -199,5 +199,6 @@ func isValidSignature(r *http.Request, key string) bool {
 	}
 
 	expectedHash := hex.EncodeToString(hash.Sum(nil))
+	logrus.Infof("expected hash %s", expectedHash)
 	return gotHash[1] == expectedHash
 }
