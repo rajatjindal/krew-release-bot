@@ -71,7 +71,7 @@ func (r RealAction) GetActionData(event *github.ReleaseEvent) (ActionData, error
 
 	upstreamKrewIndexRepoOwner := r.getInputForAction("upstream-krew-index-owner")
 	if upstreamKrewIndexRepoOwner == "" {
-		upstreamKrewIndexRepoOwner = "rajatjin"
+		upstreamKrewIndexRepoOwner = "kubernetes-sigs"
 	}
 
 	return ActionData{
@@ -89,9 +89,7 @@ func (r RealAction) GetActionData(event *github.ReleaseEvent) (ActionData, error
 			TokenUserHandle:           r.TokenUserHandle,
 		},
 		Derived: Derived{
-			// UpstreamCloneURL: getRepoURL(upstreamKrewIndexRepoOwner, upstreamKrewIndexRepoName),
-			// LocalCloneURL:    getRepoURL("rajatjinda"),
-			UpstreamCloneURL: getRepoURL("rajatjin", "krew-index"),
+			UpstreamCloneURL: getRepoURL(upstreamKrewIndexRepoOwner, upstreamKrewIndexRepoName),
 			LocalCloneURL:    getRepoURL("krew-plugin-release-bot", "krew-index"),
 		},
 	}, nil
