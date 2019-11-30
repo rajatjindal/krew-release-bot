@@ -424,6 +424,7 @@
     "gopkg.in/src-d/go-git.v4/plumbing/transport/http",
     "gopkg.in/yaml.v2",
     "sigs.k8s.io/krew/pkg/index/indexscanner",
+    "sigs.k8s.io/krew/pkg/index/validation",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
