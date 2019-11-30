@@ -135,11 +135,21 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logrus.Info("update plugin manifest with latest release info")
-
 	//https://raw.githubusercontent.com/rajatjindal/kubectl-modify-secret/master/.krew.yaml
 	templateFileURI := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/master/.krew.yaml", actionData.RepoOwner, actionData.Repo)
 	actualFile := filepath.Join(tempdir, "plugins", krew.PluginFileName(actionData.Inputs.PluginName))
+
+	logrus.Info("validating ownership")
+	err = krew.ValidateOwnership(actualFile, actionData.RepoOwner)
+	if err != nil {
+		logrus.Errorf("failed when validating ownership with error: %s", err.Error())
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("could not verify ownership of plugin."))
+		return
+	}
+
+	logrus.Info("update plugin manifest with latest release info")
+
 	err = krew.UpdatePluginManifest(templateFileURI, actualFile, actionData.ReleaseInfo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -147,6 +157,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = krew.ValidatePlugin(actionData.Inputs.PluginName, actualFile)
 	logrus.Infof("pushing changes to branch %s", actionData.ReleaseInfo.GetTagName())
 	commit := helpers.Commit{
 		Msg:        fmt.Sprintf("new version %s of %s", actionData.ReleaseInfo.GetTagName(), actionData.Inputs.PluginName),
