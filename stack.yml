@@ -3,7 +3,7 @@ provider:
   gateway: http://127.0.0.1:8080
 
 functions:
-  krew-bot:
+  krew-release-bot:
     lang: dockerfile
     handler: ./krew-plugin-release-bot
     image: krew-plugin-release-bot:0.1
