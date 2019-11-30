@@ -158,6 +158,13 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = krew.ValidatePlugin(actionData.Inputs.PluginName, actualFile)
+	if err != nil {
+		logrus.Errorf("failed when validating plugin specwith error: %s", err.Error())
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("validate spec failed"))
+		return
+	}
+
 	logrus.Infof("pushing changes to branch %s", actionData.ReleaseInfo.GetTagName())
 	commit := helpers.Commit{
 		Msg:        fmt.Sprintf("new version %s of %s", actionData.ReleaseInfo.GetTagName(), actionData.Inputs.PluginName),
