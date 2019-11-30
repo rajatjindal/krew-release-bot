@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
-	"github.com/rajatjindal/krew-plugin-release-bot/pkg/actions"
+	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/actions"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"

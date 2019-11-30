@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-github/github"
-	"github.com/rajatjindal/krew-release-bot/pkg/actions"
-	"github.com/rajatjindal/krew-release-bot/pkg/helpers"
-	"github.com/rajatjindal/krew-release-bot/pkg/krew"
+	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/actions"
+	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/helpers"
+	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/krew"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
