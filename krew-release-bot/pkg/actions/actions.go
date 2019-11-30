@@ -48,6 +48,7 @@ type RealAction struct {
 	TokenUserHandle string `yaml:"token-user-handle"`
 	TokenUsername   string `yaml:"token-username"`
 	TokenEmail      string `yaml:"token-email"`
+	WebhookSecret   string `yaml:"webhook-secret"`
 }
 
 //GetActionData returns action data

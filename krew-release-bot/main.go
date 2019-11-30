@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-github/github"
 	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/actions"
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", Handle)
-	log.Fatal(s.ListenAndServe())
+	logrus.Fatal(s.ListenAndServe())
 }
 
 const credentialsFile = "/var/openfaas/secrets/krew-release-bot.yaml"
@@ -57,19 +57,25 @@ func initCredentials() (actions.RealAction, error) {
 
 //Handle handles the function call to function
 func Handle(w http.ResponseWriter, r *http.Request) {
-	t := github.WebHookType(r)
-	if t == "" {
-		logrus.Error("header 'X-GitHub-Event' not found. cannot handle this request")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("header 'X-GitHub-Event' not found."))
-		return
-	}
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error("failed to read request body. error: ", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to read request body."))
+		return
+	}
+
+	if !isValidSignature(r, realAction.WebhookSecret) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("forbidden"))
+		return
+	}
+
+	t := github.WebHookType(r)
+	if t == "" {
+		logrus.Error("header 'X-GitHub-Event' not found. cannot handle this request")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("header 'X-GitHub-Event' not found."))
 		return
 	}
 
@@ -171,13 +177,27 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(pr))
 }
 
-func isValidSignature(githubSignature string, requestBody []byte, keyForSignature string) bool {
-	hash := hmac.New(sha1.New, []byte(keyForSignature))
-	if _, err := hash.Write(requestBody); err != nil {
-		log.Printf("Cannot compute the HMAC for request: %s\n", err)
+func isValidSignature(r *http.Request, key string) bool {
+	// Assuming a non-empty header
+	gotHash := strings.SplitN(r.Header.Get("X-Hub-Signature"), "=", 2)
+	if gotHash[0] != "sha1" {
+		return false
+	}
+
+	defer r.Body.Close()
+
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		logrus.Infof("Cannot read the request body: %s\n", err)
+		return false
+	}
+
+	hash := hmac.New(sha1.New, []byte(key))
+	if _, err := hash.Write(b); err != nil {
+		logrus.Infof("Cannot compute the HMAC for request: %s\n", err)
 		return false
 	}
 
 	expectedHash := hex.EncodeToString(hash.Sum(nil))
-	return githubSignature == expectedHash
+	return gotHash[1] == expectedHash
 }
