@@ -1,1 +1,1 @@
-krew-plugin-release-bot
+krew-release-bot
