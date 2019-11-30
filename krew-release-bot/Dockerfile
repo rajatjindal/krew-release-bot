@@ -4,7 +4,7 @@ WORKDIR /go/src/github.com/rajatjindal/krew-release-bot/krew-release-bot
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build --ldflags "-s -w" -o krew-release-bot main.go
 
-FROM openfaas/classic-watchdog:0.18.1 as watchdog
+FROM openfaas/of-watchdog:0.7.2 as watchdog
 
 FROM alpine:3.10.3
 
@@ -22,7 +22,6 @@ WORKDIR /home/app
 USER app
 
 COPY --from=builder /go/src/github.com/rajatjindal/krew-release-bot/krew-release-bot/krew-release-bot /usr/local/bin/
-ENTRYPOINT ["/usr/local/bin/krew-release-bot"]
 
 # Populate example here - i.e. "cat", "sha512sum" or "node index.js"
 ENV fprocess="/usr/local/bin/krew-release-bot"
