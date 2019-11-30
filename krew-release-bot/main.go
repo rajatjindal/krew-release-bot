@@ -57,17 +57,11 @@ func initCredentials() (actions.RealAction, error) {
 
 //Handle handles the function call to function
 func Handle(w http.ResponseWriter, r *http.Request) {
-	if !isValidSignature(r, realAction.WebhookSecret) {
+	body, ok := isValidSignature(r, realAction.WebhookSecret)
+
+	if !ok {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("forbidden"))
-		return
-	}
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		logrus.Error("failed to read request body. error: ", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to read request body."))
 		return
 	}
 
@@ -177,11 +171,11 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(pr))
 }
 
-func isValidSignature(r *http.Request, key string) bool {
+func isValidSignature(r *http.Request, key string) ([]byte, bool) {
 	// Assuming a non-empty header
 	gotHash := strings.SplitN(r.Header.Get("X-Hub-Signature"), "=", 2)
 	if gotHash[0] != "sha1" {
-		return false
+		return nil, false
 	}
 
 	defer r.Body.Close()
@@ -189,16 +183,16 @@ func isValidSignature(r *http.Request, key string) bool {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Infof("Cannot read the request body: %s\n", err)
-		return false
+		return nil, false
 	}
 
 	hash := hmac.New(sha1.New, []byte(key))
 	if _, err := hash.Write(b); err != nil {
 		logrus.Infof("Cannot compute the HMAC for request: %s\n", err)
-		return false
+		return nil, false
 	}
 
 	expectedHash := hex.EncodeToString(hash.Sum(nil))
 	logrus.Infof("expected hash %s", expectedHash)
-	return gotHash[1] == expectedHash
+	return b, gotHash[1] == expectedHash
 }
