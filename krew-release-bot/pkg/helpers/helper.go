@@ -162,6 +162,7 @@ func getTitle(actionData actions.ActionData) *string {
 
 func getBranchName(actionData actions.ActionData) *string {
 	s := fmt.Sprintf("%s-%s", actionData.Actor, actionData.ReleaseInfo.GetTagName())
+	fmt.Printf("creating branch %s", s)
 	return github.String(s)
 }
 
