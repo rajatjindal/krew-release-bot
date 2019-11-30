@@ -57,17 +57,17 @@ func initCredentials() (actions.RealAction, error) {
 
 //Handle handles the function call to function
 func Handle(w http.ResponseWriter, r *http.Request) {
+	if !isValidSignature(r, realAction.WebhookSecret) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("forbidden"))
+		return
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error("failed to read request body. error: ", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to read request body."))
-		return
-	}
-
-	if !isValidSignature(r, realAction.WebhookSecret) {
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("forbidden"))
 		return
 	}
 
