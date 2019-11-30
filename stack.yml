@@ -1,0 +1,13 @@
+provider:
+  name: faas
+  gateway: http://127.0.0.1:8080
+
+functions:
+  krew-bot:
+    lang: dockerfile
+    handler: ./krew-plugin-release-bot
+    image: krew-plugin-release-bot:0.1
+    labels:
+      com.openfaas.scale.zero: false
+    secrets:
+      - krew-plugin-release-bot
