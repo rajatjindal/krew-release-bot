@@ -26,6 +26,9 @@ ENTRYPOINT ["/usr/local/bin/krew-release-bot"]
 
 # Populate example here - i.e. "cat", "sha512sum" or "node index.js"
 ENV fprocess="/usr/local/bin/krew-release-bot"
+ENV mode="http"
+ENV upstream_url="http://127.0.0.1:8082"
+
 # Set to true to see request in function logs
 ENV write_debug="false"
 
