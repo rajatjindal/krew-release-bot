@@ -35,3 +35,13 @@ func ValidatePlugin(name, file string) error {
 
 	return validation.ValidatePlugin(name, plugin)
 }
+
+//GetPluginName gets the plugin name from template .krew.yaml file
+func GetPluginName(file string) (string, error) {
+	plugin, err := indexscanner.ReadPluginFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	return plugin.GetName(), nil
+}

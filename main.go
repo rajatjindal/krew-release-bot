@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -124,9 +125,31 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	//https://raw.githubusercontent.com/rajatjindal/kubectl-modify-secret/master/.krew.yaml
 	templateFileURI := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/master/.krew.yaml", actionData.RepoOwner, actionData.Repo)
-	actualFile := filepath.Join(tempdir, "plugins", krew.PluginFileName(actionData.Inputs.PluginName))
+	tempfile, err := ioutil.TempFile("", "krew-")
+	if err != nil {
+		logrus.Info("failed to create temp file")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to create temp file."))
+		return
+	}
+	defer os.Remove(tempfile.Name())
+
+	err = krew.UpdatePluginManifest(templateFileURI, tempfile.Name(), actionData.ReleaseInfo)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	actionData.Inputs.PluginName, err = krew.GetPluginName(tempfile.Name())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	logrus.Info("validating ownership")
+	actualFile := filepath.Join(tempdir, "plugins", krew.PluginFileName(actionData.Inputs.PluginName))
 	err = krew.ValidateOwnership(actualFile, actionData.RepoOwner)
 	if err != nil {
 		logrus.Errorf("failed when validating ownership with error: %s", err.Error())
@@ -136,19 +159,19 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.Info("update plugin manifest with latest release info")
-
-	err = krew.UpdatePluginManifest(templateFileURI, actualFile, actionData.ReleaseInfo)
+	err = krew.ValidatePlugin(actionData.Inputs.PluginName, tempfile.Name())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		logrus.Errorf("failed when validating plugin spec with error: %s", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("validate spec failed"))
 		return
 	}
 
-	err = krew.ValidatePlugin(actionData.Inputs.PluginName, actualFile)
+	_, err = copy(tempfile.Name(), actualFile)
 	if err != nil {
-		logrus.Errorf("failed when validating plugin specwith error: %s", err.Error())
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("validate spec failed"))
+		logrus.Errorf("failed when copying plugin spec with error: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("copy spec file failed"))
 		return
 	}
 
@@ -200,4 +223,29 @@ func isValidSignature(r *http.Request, key string) ([]byte, bool) {
 	expectedHash := hex.EncodeToString(hash.Sum(nil))
 	logrus.Infof("expected hash %s", expectedHash)
 	return b, gotHash[1] == expectedHash
+}
+
+func copy(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }
