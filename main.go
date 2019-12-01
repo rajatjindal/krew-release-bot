@@ -7,52 +7,39 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/google/go-github/github"
-	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/actions"
-	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/helpers"
-	"github.com/rajatjindal/krew-release-bot/krew-release-bot/pkg/krew"
+	"github.com/rajatjindal/krew-release-bot/pkg/actions"
+	"github.com/rajatjindal/krew-release-bot/pkg/helpers"
+	"github.com/rajatjindal/krew-release-bot/pkg/krew"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
+var realAction actions.RealAction
+
 func main() {
-	var err error
-	realAction, err = initCredentials()
-	if err != nil {
-		logrus.Fatalf("failed to initialize credentials. error: %v", err)
+	ghToken := os.Getenv("GH_TOKEN")
+	webhookToken := os.Getenv("WEBHOOK_TOKEN")
+
+	realAction = actions.RealAction{
+		Token:           ghToken,
+		WebhookSecret:   webhookToken,
+		TokenEmail:      "krewpluginreleasebot@gmail.com",
+		TokenUserHandle: "krew-plugin-release-bot",
+		TokenUsername:   "Krew Plugin Release Bot",
 	}
 
 	logrus.Infof("user: %s, name: %q", realAction.TokenUserHandle, realAction.TokenUsername)
-
 	s := &http.Server{
-		Addr:           fmt.Sprintf(":%d", 8082),
+		Addr:           fmt.Sprintf(":%d", 8080),
 		MaxHeaderBytes: 1 << 20,
 	}
 
 	http.HandleFunc("/", Handle)
 	logrus.Fatal(s.ListenAndServe())
-}
-
-const credentialsFile = "/var/openfaas/secrets/krew-release-bot.yaml"
-
-var realAction actions.RealAction
-
-func initCredentials() (actions.RealAction, error) {
-	r, err := ioutil.ReadFile(credentialsFile)
-	if err != nil {
-		return actions.RealAction{}, fmt.Errorf("failed to read credentials file with err: %s", err.Error())
-	}
-
-	t := actions.RealAction{}
-	err = yaml.Unmarshal(r, &t)
-	if err != nil {
-		return actions.RealAction{}, err
-	}
-
-	return t, nil
 }
 
 //Handle handles the function call to function
