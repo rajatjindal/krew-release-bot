@@ -71,7 +71,7 @@ func (r RealAction) GetActionData(event *github.ReleaseEvent) (ActionData, error
 
 	upstreamKrewIndexRepoOwner := r.getInputForAction("upstream-krew-index-owner")
 	if upstreamKrewIndexRepoOwner == "" {
-		upstreamKrewIndexRepoOwner = "rajatjin"
+		upstreamKrewIndexRepoOwner = "kubernetes-sigs"
 	}
 
 	return ActionData{
