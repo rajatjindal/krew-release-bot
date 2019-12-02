@@ -1,4 +1,4 @@
-<a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-plugin-release-bot.png" width="100"></a><span width="10px">
+<a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-release-bot.png" width="100"></a><span width="10px">
 
 krew-release-bot is a bot that listens for release events from krew plugins repos which have configured the webhooks for listening to release event.
 
