@@ -175,10 +175,10 @@ func getHead(actionData actions.ActionData) *string {
 func getPRBody(actionData actions.ActionData) *string {
 	prBody := `hey krew-index team,
 
-I am [krew-plugin-release-bot](https://github.com/rajatjindal/krew-plugin-release), and I would like to open this PR to publish version %s of %s on behalf of [%s](https://github.com/%s).
+I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I would like to open this PR to publish version %s of %s on behalf of [%s](https://github.com/%s).
 
 Thanks,
-[krew-plugin-release-bot](https://github.com/rajatjindal/krew-plugin-release)`
+[krew-release-bot](https://github.com/rajatjindal/krew-release-bot)`
 
 	s := fmt.Sprintf(prBody,
 		fmt.Sprintf("`%s`", actionData.ReleaseInfo.GetTagName()),
