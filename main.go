@@ -29,8 +29,8 @@ func main() {
 		Token:           ghToken,
 		WebhookSecret:   webhookToken,
 		TokenEmail:      "krewpluginreleasebot@gmail.com",
-		TokenUserHandle: "krew-plugin-release-bot",
-		TokenUsername:   "Krew Plugin Release Bot",
+		TokenUserHandle: "krew-release-bot",
+		TokenUsername:   "Krew Release Bot",
 	}
 
 	logrus.Infof("user: %s, name: %q", realAction.TokenUserHandle, realAction.TokenUsername)
