@@ -89,7 +89,7 @@ func (r RealAction) GetActionData(event *github.ReleaseEvent) (ActionData, error
 		},
 		Derived: Derived{
 			UpstreamCloneURL: getRepoURL(upstreamKrewIndexRepoOwner, upstreamKrewIndexRepoName),
-			LocalCloneURL:    getRepoURL("krew-plugin-release-bot", "krew-index"),
+			LocalCloneURL:    getRepoURL("krew-release-bot", "krew-index"),
 		},
 	}, nil
 }
