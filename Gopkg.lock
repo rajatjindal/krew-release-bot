@@ -414,6 +414,7 @@
   input-imports = [
     "github.com/go-resty/resty",
     "github.com/google/go-github/github",
+    "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "golang.org/x/oauth2",
     "gopkg.in/src-d/go-git.v4",
@@ -422,7 +423,6 @@
     "gopkg.in/src-d/go-git.v4/plumbing/object",
     "gopkg.in/src-d/go-git.v4/plumbing/transport",
     "gopkg.in/src-d/go-git.v4/plumbing/transport/http",
-    "gopkg.in/yaml.v2",
     "sigs.k8s.io/krew/pkg/index/indexscanner",
     "sigs.k8s.io/krew/pkg/index/validation",
   ]
