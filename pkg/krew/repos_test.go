@@ -20,14 +20,14 @@ func TestGetKrewIndexRepoName(t *testing.T) {
 		{
 			name: "env variable is set to empty value",
 			setup: func() {
-				os.Setenv("upstream-krew-index-repo-name", "")
+				os.Setenv("UPSTREAM_KREW_INDEX_REPO_NAME", "")
 			},
 			expected: "krew-index",
 		},
 		{
 			name: "env variable is set to value",
 			setup: func() {
-				os.Setenv("upstream-krew-index-repo-name", "foo-bar")
+				os.Setenv("UPSTREAM_KREW_INDEX_REPO_NAME", "foo-bar")
 			},
 			expected: "foo-bar",
 		},
@@ -54,19 +54,19 @@ func TestGetKrewIndexRepoOwner(t *testing.T) {
 	}{
 		{
 			name:     "env variable is not set",
-			expected: "rajatjin",
+			expected: "kubernetes-sigs",
 		},
 		{
 			name: "env variable is set to empty value",
 			setup: func() {
-				os.Setenv("upstream-krew-index-repo-owner", "")
+				os.Setenv("UPSTREAM_KREW_INDEX_REPO_OWNER", "")
 			},
-			expected: "rajatjin",
+			expected: "kubernetes-sigs",
 		},
 		{
 			name: "env variable is set to value",
 			setup: func() {
-				os.Setenv("upstream-krew-index-repo-owner", "foo-bar-user")
+				os.Setenv("UPSTREAM_KREW_INDEX_REPO_OWNER", "foo-bar-user")
 			},
 			expected: "foo-bar-user",
 		},

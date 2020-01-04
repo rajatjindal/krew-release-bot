@@ -136,7 +136,7 @@ func submitForPR(request *source.ReleaseRequest) (string, error) {
 		return "", err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "https://krew-release-bot-test.rajatjindal.com/github-action-webhook", bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, getWebhookURL(), bytes.NewBuffer(body))
 	if err != nil {
 		return "", err
 	}
@@ -164,4 +164,12 @@ func submitForPR(request *source.ReleaseRequest) (string, error) {
 	}
 
 	return string(respBody), nil
+}
+
+func getWebhookURL() string {
+	if os.Getenv("KREW_RELEASE_BOT_WEBHOOK_URL") != "" {
+		return os.Getenv("KREW_RELEASE_BOT_WEBHOOK_URL")
+	}
+
+	return "https://krew-release-bot.rajatjindal.com/github-action-webhook"
 }
