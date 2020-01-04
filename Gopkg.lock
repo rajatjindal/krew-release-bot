@@ -25,14 +25,6 @@
   version = "v1.12.0"
 
 [[projects]]
-  digest = "1:e63cd05da63802f9af5033119ac3e4710052872ce3e1f947e1e95c973420c88f"
-  name = "github.com/go-resty/resty"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "de0735f66dae7abf8fb1073b4ace3032c1491424"
-  version = "v2.1.0"
-
-[[projects]]
   digest = "1:582e25eccee928dc12416ea4c23b6dae8f3b5687730632aa1473ebebe80a2359"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -82,6 +74,14 @@
   pruneopts = "UT"
   revision = "f140a6486e521aad38f5917de355cbf147cc0496"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:574f4e0c57e045c9d109d23c60c586b2198eaead53daa97ed5f65c616e22a9b0"
+  name = "github.com/h2non/parth"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b4df798d65426f8c8ab5ca5f9987aec5575d26c9"
+  version = "v2.0.1"
 
 [[projects]]
   branch = "master"
@@ -203,7 +203,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:65b5ef269eafbf755f0db61346f396462feec296525f439a2e04010b257b860e"
+  digest = "1:bd256f38caeb73b483ebb3e0984f2765e42287959a4e0335733e98b53451907a"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -214,7 +214,6 @@
     "idna",
     "internal/socks",
     "proxy",
-    "publicsuffix",
   ]
   pruneopts = "UT"
   revision = "da9a3fd4c5820e74b24a6cb7fb438dc9b0dd377c"
@@ -282,6 +281,14 @@
   pruneopts = "UT"
   revision = "971852bfffca25b069c31162ae8f247a3dba083b"
   version = "v1.6.5"
+
+[[projects]]
+  digest = "1:80d8747c77f6b6c8e77232cd04aa93cbf4489836d47e487566d94e6ecbe23082"
+  name = "gopkg.in/h2non/gock.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3ffff9b1aa8200275a5eb219c5f9c62bd27acb31"
+  version = "v1.0.15"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
@@ -436,12 +443,12 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/go-resty/resty",
     "github.com/google/go-github/github",
     "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
     "golang.org/x/oauth2",
+    "gopkg.in/h2non/gock.v1",
     "gopkg.in/src-d/go-git.v4",
     "gopkg.in/src-d/go-git.v4/config",
     "gopkg.in/src-d/go-git.v4/plumbing",

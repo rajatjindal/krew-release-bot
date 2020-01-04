@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+go.sum
 
 # Folders
 _obj
@@ -23,6 +24,7 @@ _testmain.go
 *.test
 *.prof
 
-coverage.out
-coverage.txt
-go.sum
+.idea/
+*.iml
+*.out
+*.tmp
