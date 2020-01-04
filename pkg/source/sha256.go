@@ -6,16 +6,25 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/go-resty/resty"
 	"github.com/sirupsen/logrus"
 )
 
-func downloadFileWithName(uri, name string) (string, error) {
-	client := resty.New()
+//DownloadFileWithName downloads a file with name
+func DownloadFileWithName(uri, name string) (string, error) {
+	resp, err := http.Get(uri)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("downloading file %s failed. status code: %d, expected: %d", uri, resp.StatusCode, http.StatusOK)
+	}
 
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
@@ -23,13 +32,15 @@ func downloadFileWithName(uri, name string) (string, error) {
 	}
 
 	file := filepath.Join(dir, name)
-	resp, err := client.R().SetOutput(file).Get(uri)
+	out, err := os.Create(file)
 	if err != nil {
 		return "", err
 	}
+	defer out.Close()
 
-	if resp.IsError() {
-		return "", fmt.Errorf("received response-code %d from %s", resp.StatusCode(), uri)
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to save file %s. error: %v", file, err)
 	}
 
 	logrus.Infof("downloaded file %s", file)
@@ -37,7 +48,7 @@ func downloadFileWithName(uri, name string) (string, error) {
 }
 
 func downloadFile(uri string) (string, error) {
-	return downloadFileWithName(uri, fmt.Sprintf("%d", time.Now().Unix()))
+	return DownloadFileWithName(uri, fmt.Sprintf("%d", time.Now().Unix()))
 }
 
 func getSha256ForAsset(uri string) (string, error) {

@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-resty/resty"
 	"github.com/google/go-github/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 )
@@ -93,7 +92,6 @@ func (gw *GithubWebhook) Parse(r *http.Request) (*source.ReleaseRequest, error) 
 //TODO: possibly use creds here for private repo scenario
 func getKrewTemplate(owner, repo, tagName string) (string, error) {
 	templateFileLoc := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s/.krew.yaml", owner, repo, tagName)
-	client := resty.New()
 
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
@@ -101,16 +99,7 @@ func getKrewTemplate(owner, repo, tagName string) (string, error) {
 	}
 
 	file := filepath.Join(dir, ".krew.yaml")
-	resp, err := client.R().SetOutput(file).Get(templateFileLoc)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.IsError() {
-		return "", fmt.Errorf("received response code %d from %s", resp.StatusCode(), templateFileLoc)
-	}
-
-	return file, nil
+	return source.DownloadFileWithName(templateFileLoc, file)
 }
 
 func (gw *GithubWebhook) isValidSignature(r *http.Request) ([]byte, error) {
