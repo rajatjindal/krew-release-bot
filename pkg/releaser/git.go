@@ -174,7 +174,9 @@ func (r *Releaser) getHead(request *source.ReleaseRequest) *string {
 
 func (r *Releaser) getPRBody(request *source.ReleaseRequest) *string {
 	prBody := `hey krew-index team,
+
 I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I would like to open this PR to publish version %s of %s on behalf of [%s](https://github.com/%s).
+
 Thanks,
 [krew-release-bot](https://github.com/rajatjindal/krew-release-bot)`
 
