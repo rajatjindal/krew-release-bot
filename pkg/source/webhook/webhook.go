@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -34,7 +33,7 @@ func (gw *GithubWebhook) Parse(r *http.Request) (*source.ReleaseRequest, error) 
 	}
 
 	t := github.WebHookType(r)
-	if t != "" {
+	if t != "release" {
 		return nil, fmt.Errorf("expected a release event, got %q", t)
 	}
 
@@ -92,14 +91,7 @@ func (gw *GithubWebhook) Parse(r *http.Request) (*source.ReleaseRequest, error) 
 //TODO: possibly use creds here for private repo scenario
 func getKrewTemplate(owner, repo, tagName string) (string, error) {
 	templateFileLoc := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s/.krew.yaml", owner, repo, tagName)
-
-	dir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return "", err
-	}
-
-	file := filepath.Join(dir, ".krew.yaml")
-	return source.DownloadFileWithName(templateFileLoc, file)
+	return source.DownloadFileWithName(templateFileLoc, ".krew.yaml")
 }
 
 func (gw *GithubWebhook) isValidSignature(r *http.Request) ([]byte, error) {
