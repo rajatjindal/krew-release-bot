@@ -52,15 +52,16 @@ func RunAction() error {
 		return fmt.Errorf("no assets found for release with tag %q", tag)
 	}
 
+	templateFile := filepath.Join(getWorkDirectory(), ".krew.yaml")
 	releaseRequest := &source.ReleaseRequest{
 		TagName:            releaseInfo.GetTagName(),
 		PluginOwner:        owner,
 		PluginRepo:         repo,
 		PluginReleaseActor: actor,
-		TemplateFile:       filepath.Join(os.Getenv("GITHUB_WORKSPACE"), ".krew.yaml"),
+		TemplateFile:       templateFile,
 	}
 
-	pluginName, pluginManifest, err := source.ProcessTemplate(filepath.Join(os.Getenv("GITHUB_WORKSPACE"), ".krew.yaml"), releaseRequest)
+	pluginName, pluginManifest, err := source.ProcessTemplate(templateFile, releaseRequest)
 	if err != nil {
 		return err
 	}
@@ -172,4 +173,18 @@ func getWebhookURL() string {
 	}
 
 	return "https://krew-release-bot.rajatjindal.com/github-action-webhook"
+}
+
+//getInputForAction gets input to action
+func getInputForAction(key string) string {
+	return os.Getenv(fmt.Sprintf("INPUT_%s", strings.ToUpper(key)))
+}
+
+func getWorkDirectory() string {
+	workdirInput := getInputForAction("workdir")
+	if workdirInput != "" {
+		return workdirInput
+	}
+
+	return os.Getenv("GITHUB_WORKSPACE")
 }
