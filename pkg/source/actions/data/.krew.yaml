@@ -1,0 +1,29 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: my-awesome-plugin
+spec:
+  version: {{ .TagName }}
+  homepage: https://github.com/foo-bar/my-awesome-plugin
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/foo-bar/my-awesome-plugin/releases/download/{{ .TagName }}/darwin-amd64-{{ .TagName }}.tar.gz" .TagName }}
+    files:
+    - from: "*"
+      to: "."
+    bin: my-awesome-plugin
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/foo-bar/my-awesome-plugin/releases/download/{{ .TagName }}/linux-amd64-{{ .TagName }}.tar.gz" .TagName }}
+    files:
+    - from: "*"
+      to: "."
+    bin: my-awesome-plugin
+  shortDescription: This is the most awesome kubectl plugin
+  description: |
+    This plugin show what an awesome plugin looks like

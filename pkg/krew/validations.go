@@ -45,3 +45,8 @@ func GetPluginName(file string) (string, error) {
 
 	return plugin.GetName(), nil
 }
+
+//PluginFileName returns the plugin file with extension
+func PluginFileName(name string) string {
+	return fmt.Sprintf("%s%s", name, ".yaml")
+}

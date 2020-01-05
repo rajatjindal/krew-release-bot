@@ -1,0 +1,38 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: whoami
+spec:
+  version: v0.0.6
+  homepage: https://github.com/rajatjindal/kubectl-whoami
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    uri: https://github.com/rajatjindal/kubectl-whoami/releases/download/v0.0.6/darwin-amd64-v0.0.6.tar.gz
+    sha256: f31e2237fdfd18467d8b5a391cb31f9fab70e9ef104e8618916025daa50489d5
+    files:
+    - from: "*"
+      to: "."
+    bin: kubectl-whoami
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    uri: https://github.com/rajatjindal/kubectl-whoami/releases/download/v0.0.6/linux-amd64-v0.0.6.tar.gz
+    sha256: a6ffa097b132c8434379adc9620a6b728ad8434dbdaf38699650e19948265bdf
+    files:
+    - from: "*"
+      to: "."
+    bin: kubectl-whoami
+  shortDescription: Show the subject that's currently authenticated as.
+  caveats: |
+    This plugin has only been tested with RBAC token, ServiceAccount token, and BasicAuth. 
+    
+    It will be great if we can get volunteers to test it with other Auth providers.
+    
+    Read the documentation at:
+      https://github.com/rajatjindal/kubectl-whoami
+  description: |
+    This plugin show the subject that's currently authenticated as.
