@@ -6,7 +6,7 @@
 
 `krew-release-bot` is a bot that automates the update of `krew-index` on the release of new version of your `krew` (or `kubectl`) plugin.
 
-This bot can be receive events in one of the following ways:
+This bot can receive events in one of the following ways:
 
 - install [`krew-release-bot`](https://github.com/apps/krew-release-bot) github app. This app sends event to the bot when you pushlish the release manually for your plugin.
 - or use `github-action` that sends the event to the bot. This is more useful when you have automated publishing release of your plugin as well using something like e.g. `goreleaser` or equivalent.
