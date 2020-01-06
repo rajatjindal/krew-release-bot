@@ -111,15 +111,6 @@ jobs:
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
 
-#### Why do you need the token
-We use the token to ensure that the `caller` is authorized to request a release on your behalf. Without this any unauthorized user can mimic sending a release request on your behalf.
-
-We do not log or store the token anywhere and it is used to do following verifications:
-- Ensure that token is valid
-- Ensure that token has access to the repo from where the release is being requested.
-- Ensure that the owner (or org) of the repo is a prefix of homepage specified in already released plugin
-
-
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
 - only supports one plugin per git repo right now
