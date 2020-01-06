@@ -247,7 +247,7 @@ func TestRunAction(t *testing.T) {
 					Reply(200).
 					BodyString("linux-amd64")
 
-				gock.New("https://krew-release-bot-test.rajatjindal.com").
+				gock.New("https://krew-release-bot.rajatjindal.com").
 					Post("/github-action-webhook").
 					Reply(200).
 					JSON("PR https://github.com/kubernetes-sigs/krew-index/pull/26 opened successfully")

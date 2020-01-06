@@ -69,8 +69,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update new version in krew-index
       uses: rajatjindal/krew-release-bot@v0.0.20
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 #### Example with using go-releaser but not using Go modules yet
@@ -108,8 +106,6 @@ jobs:
       uses: rajatjindal/krew-release-bot@v0.0.22
       with:
         workdir: ${{ github.workspace }}/src/github.com/rajatjindal/kubectl-whoami
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ```
 

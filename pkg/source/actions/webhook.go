@@ -21,7 +21,19 @@ func NewGithubActions() (*GithubActions, error) {
 
 //Parse validates the request
 func (w *GithubActions) Parse(r *http.Request) (*source.ReleaseRequest, error) {
-	return validateTokenAndFetchRequest(r)
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	request := &source.ReleaseRequest{}
+	err = json.Unmarshal(body, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return request, nil
 }
 
 type authInjector struct {
