@@ -317,7 +317,6 @@ const releaseNoAssets = `{
 func setupEnvironment() {
 	os.Setenv("GITHUB_REPOSITORY", "foo-bar/my-awesome-plugin")
 	os.Setenv("GITHUB_ACTOR", "karthik-aryan")
-	os.Setenv("GITHUB_TOKEN", "super-secure-password")
 	os.Setenv("GITHUB_REF", "refs/tags/v0.0.2")
 	os.Setenv("GITHUB_WORKSPACE", "./data/")
 }

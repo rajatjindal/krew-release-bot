@@ -139,7 +139,6 @@ func submitForPR(request *source.ReleaseRequest) (string, error) {
 		return "", err
 	}
 
-	req.Header.Add("x-github-token", os.Getenv("GITHUB_TOKEN"))
 	req.Header.Add("content-type", "application/json")
 
 	client := http.Client{
