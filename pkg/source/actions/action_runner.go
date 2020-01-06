@@ -19,10 +19,7 @@ import (
 
 //RunAction runs the github action
 func RunAction() error {
-	mc := &http.Client{
-		Transport: &authInjector{token: os.Getenv("GITHUB_TOKEN")},
-	}
-	client := github.NewClient(mc)
+	client := github.NewClient(nil)
 
 	tag, err := getTag()
 	if err != nil {
