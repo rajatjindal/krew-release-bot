@@ -1,31 +1,15 @@
-
-<p align="center">
-  <a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-release-bot.png" width="100"></a><span width="10px">
-</p>
-
+<a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-release-bot.png" width="100"></a><span width="10px">
 
 `krew-release-bot` is a bot that automates the update of `krew-index` on the release of new version of your `krew` (or `kubectl`) plugin.
 
-This bot can receive events in one of the following ways:
 
-- install [`krew-release-bot`](https://github.com/apps/krew-release-bot) github app. This app sends event to the bot when you pushlish the release manually for your plugin.
-- or use `github-action` that sends the event to the bot. This is more useful when you have automated publishing release of your plugin as well using something like e.g. `goreleaser` or equivalent.
+You can use `github-action` that sends the event to the bot. This is the recommended way of publishing new release of your plugin. 
 
 
 # Basic Setup
-
-- Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evicd-pod) repo for an example.
-- The bot will use `.krew.yaml` template and generate the plugin spec file for your plugin using information from the release and open the PR for `krew-index` repo.
-
-## The bot can be configured in two ways
-
-- using github actions (recommended)
-- [using github app](docs/using-github-app.md)
-
-## Using github actions
-
 - Make sure you have enabled github actions for your repo
-- Once you have setup the actions/automation to publish the release with assets, just configure the job to run krew-release-bot action.
+- Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evicd-pod) repo for an example.
+- Setup the action to be triggered on pushing of new tag, after the action that publishes the new release with assets. See `goreleaser` examples below.
 
 ##### Example when using go-releaser
 
@@ -59,6 +43,9 @@ jobs:
 ```
 
 #### Example with using go-releaser but not using Go modules yet
+
+If you can recommend a better way to accomplish this, we will appreciate the PR.
+
 `<your-git-root>/.github/workflows/release.yml`
 
 ```yaml
@@ -97,25 +84,6 @@ jobs:
 ```
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
-
-
-### Configuration when using github app
-
-#### How to Install
-
-- Go to [`https://github.com/apps/krew-release-bot`](https://github.com/apps/krew-release-bot)
-- Click on Configure
-- Select the User/Org which owns the repo where you plan to install this app.
-- Confirm Password (required by `github`). App don't get access to this password.
-- Refer that `read` access is required to `code` and `metadata` to listen to `release` events.
-- From `Repository Access` box, select the repositories where you want to enable it. You can enable for `all` or `only selected` repositories.
-- Click Save and you are all set.
-
-#### Permissions required
-
-The github app needs `read` access to `code` and `metadata` of the repository. Refer to the screenshot below:
-
-![Permissions](docs/permissions.png)
 
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
