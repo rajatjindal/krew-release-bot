@@ -20,7 +20,7 @@ This bot can receive events in one of the following ways:
 ## The bot can be configured in two ways
 
 - using github actions (recommended)
-- using github app
+- [using github app](docs/using-github-app.md)
 
 ## Using github actions
 
