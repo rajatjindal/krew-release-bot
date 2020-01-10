@@ -17,23 +17,10 @@ This bot can receive events in one of the following ways:
 - Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evicd-pod) repo for an example.
 - The bot will use `.krew.yaml` template and generate the plugin spec file for your plugin using information from the release and open the PR for `krew-index` repo.
 
-## Configuration when using github app
+## The bot can be configured in two ways
 
-#### How to Install
-
-- Go to [`https://github.com/apps/krew-release-bot`](https://github.com/apps/krew-release-bot)
-- Click on Configure
-- Select the User/Org which owns the repo where you plan to install this app.
-- Confirm Password (required by `github`). App don't get access to this password.
-- Refer that `read` access is required to `code` and `metadata` to listen to `release` events.
-- From `Repository Access` box, select the repositories where you want to enable it. You can enable for `all` or `only selected` repositories.
-- Click Save and you are all set.
-
-#### Permissions required
-
-The github app needs `read` access to `code` and `metadata` of the repository. Refer to the screenshot below:
-
-![Permissions](docs/permissions.png)
+- using github actions (recommended)
+- using github app
 
 ## Using github actions
 
@@ -110,6 +97,25 @@ jobs:
 ```
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
+
+
+### Configuration when using github app
+
+#### How to Install
+
+- Go to [`https://github.com/apps/krew-release-bot`](https://github.com/apps/krew-release-bot)
+- Click on Configure
+- Select the User/Org which owns the repo where you plan to install this app.
+- Confirm Password (required by `github`). App don't get access to this password.
+- Refer that `read` access is required to `code` and `metadata` to listen to `release` events.
+- From `Repository Access` box, select the repositories where you want to enable it. You can enable for `all` or `only selected` repositories.
+- Click Save and you are all set.
+
+#### Permissions required
+
+The github app needs `read` access to `code` and `metadata` of the repository. Refer to the screenshot below:
+
+![Permissions](docs/permissions.png)
 
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
