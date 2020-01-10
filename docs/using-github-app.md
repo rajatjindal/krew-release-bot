@@ -1,4 +1,4 @@
-* It is supported, but not recommended.
+recommended way to use krew-release-bot is through github-actions. look at readme at root of this repo for example.
 
 ### Configuration when using github app
 
