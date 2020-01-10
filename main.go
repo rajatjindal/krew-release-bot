@@ -28,7 +28,6 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	http.HandleFunc("/github-webhook", releaser.HandleGithubWebhook)
 	http.HandleFunc("/github-action-webhook", releaser.HandleActionWebhook)
 
 	logrus.Fatal(s.ListenAndServe())
