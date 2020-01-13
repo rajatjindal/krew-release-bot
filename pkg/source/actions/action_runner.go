@@ -49,7 +49,9 @@ func RunAction() error {
 		return fmt.Errorf("no assets found for release with tag %q", tag)
 	}
 
-	templateFile := filepath.Join(getWorkDirectory(), ".krew.yaml")
+	templateFile := getTemplateFile()
+	logrus.Infof("using template file %q", templateFile)
+
 	releaseRequest := &source.ReleaseRequest{
 		TagName:            releaseInfo.GetTagName(),
 		PluginOwner:        owner,
@@ -183,4 +185,13 @@ func getWorkDirectory() string {
 	}
 
 	return os.Getenv("GITHUB_WORKSPACE")
+}
+
+func getTemplateFile() string {
+	templateFile := getInputForAction("krew_template_file")
+	if templateFile != "" {
+		return filepath.Join(getWorkDirectory(), templateFile)
+	}
+
+	return filepath.Join(getWorkDirectory(), ".krew.yaml")
 }
