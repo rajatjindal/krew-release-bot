@@ -6,20 +6,10 @@ import (
 	"os"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
-	"github.com/rajatjindal/krew-release-bot/pkg/source/actions"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	if os.Getenv("GITHUB_ACTIONS") == "true" {
-		err := actions.RunAction()
-		if err != nil {
-			logrus.Fatal(err)
-		}
-
-		os.Exit(0)
-	}
-
 	ghToken := os.Getenv("GH_TOKEN")
 	releaser := releaser.New(ghToken)
 
@@ -29,6 +19,5 @@ func main() {
 	}
 
 	http.HandleFunc("/github-action-webhook", releaser.HandleActionWebhook)
-
 	logrus.Fatal(s.ListenAndServe())
 }
