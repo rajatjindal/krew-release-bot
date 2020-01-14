@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v29/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -109,11 +109,18 @@ func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, 
 		},
 	})
 
+	branchName := r.getBranchName(request)
+	pushRef := getPushRefSpec(*branchName)
+
 	return repo.Push(&ugit.PushOptions{
 		RemoteName: commit.RemoteName,
-		RefSpecs:   []config.RefSpec{config.DefaultPushRefSpec},
+		RefSpecs:   []config.RefSpec{config.RefSpec(pushRef)},
 		Auth:       r.getAuth(),
 	})
+}
+
+func getPushRefSpec(branchName string) string {
+	return fmt.Sprintf("refs/heads/%s:refs/heads/%s", branchName, branchName)
 }
 
 //SubmitPR submits the PR
