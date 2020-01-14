@@ -12,9 +12,9 @@ if [ "$PROJECT_ID" == "" ]; then
 fi
 
 ## push for github actions
-docker build . -t rajatjindal/krew-release-bot:$version
+docker build . -t rajatjindal/krew-release-bot:$version -f action.Dockerfile
 docker push rajatjindal/krew-release-bot:$version
 
 ## push for cloud run
-docker tag rajatjindal/krew-release-bot:$version gcr.io/$PROJECT_ID/krew-release-bot:$version
+docker build . -t gcr.io/$PROJECT_ID/krew-release-bot:$version -f webhook.Dockerfile
 docker push gcr.io/$PROJECT_ID/krew-release-bot:$version
