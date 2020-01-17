@@ -2,7 +2,6 @@
 
 `krew-release-bot` is a bot that automates the update of `krew-index` on the release of new version of your `krew` (or `kubectl`) plugin.
 
-
 You can use `github-action` that sends the event to the bot. This is the recommended way of publishing new release of your plugin. 
 
 
@@ -40,47 +39,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update new version in krew-index
       uses: rajatjindal/krew-release-bot@v0.0.25
-```
-
-#### Example with using go-releaser but not using Go modules yet
-
-If you can recommend a better way to accomplish this, we will appreciate the PR.
-
-`<your-git-root>/.github/workflows/release.yml`
-
-```yaml
-name: release
-on:
-  push:
-    tags:
-    - 'v*.*.*'
-jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@master
-      with:
-        path: ${{ github.workspace }}/src/github.com/rajatjindal/kubectl-whoami
-    - name: Setup Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13
-    - name: GoReleaser
-      uses: goreleaser/goreleaser-action@v1
-      with:
-        version: latest
-        args: release --rm-dist
-        workdir: ${{ github.workspace }}/src/github.com/rajatjindal/kubectl-whoami
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GO111MODULE: off
-        GOPATH: ${{ github.workspace }}
-    - name: Update new version in krew-index
-      uses: rajatjindal/krew-release-bot@v0.0.25
-      with:
-        workdir: ${{ github.workspace }}/src/github.com/rajatjindal/kubectl-whoami
-
 ```
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
