@@ -7,7 +7,7 @@ You can use `github-action` that sends the event to the bot. This is the recomme
 
 # Basic Setup
 - Make sure you have enabled github actions for your repo
-- Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evicd-pod) repo for an example.
+- Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evict-pod) repo for an example.
 - Setup the action to be triggered on pushing of new tag, after the action that publishes the new release with assets. See `goreleaser` examples below.
 
 ##### Example when using go-releaser
