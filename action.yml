@@ -3,7 +3,7 @@ name: 'krew-release-bot'
 description: 'automatically opens PR for upstream krew-index repo when you publish new release of your awesome plugin'
 runs:
   using: 'docker'
-  image: 'docker://rajatjindal/krew-release-bot:v0.0.28'
+  image: 'docker://rajatjindal/krew-release-bot:v0.0.29'
 inputs:
   workdir:
     description: 'Working directory, defaults to env.GITHUB_WORKSPACE'

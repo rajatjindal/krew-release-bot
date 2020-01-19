@@ -12,7 +12,7 @@ import (
 
 //ProcessTemplate process the .krew.yaml template for the release request
 func ProcessTemplate(templateFile string, values interface{}) (string, []byte, error) {
-	t := template.New(".krew.yaml").Funcs(map[string]interface{}{
+	t := template.New(templateFile).Funcs(map[string]interface{}{
 		"addURIAndSha": func(url, tag string) string {
 			t := struct {
 				TagName string
