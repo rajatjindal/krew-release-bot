@@ -45,10 +45,6 @@ func RunAction() error {
 		return fmt.Errorf("release with tag %q is a pre-release. skipping", releaseInfo.GetTagName())
 	}
 
-	if len(releaseInfo.Assets) == 0 {
-		return fmt.Errorf("no assets found for release with tag %q", tag)
-	}
-
 	templateFile := getTemplateFile()
 	logrus.Infof("using template file %q", templateFile)
 
