@@ -129,6 +129,9 @@ func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
 	tc := oauth2.NewClient(context.TODO(), ts)
 	client := github.NewClient(tc)
 
+	// Close outdated PRs before submiting new one
+	err := r.closeExistingPR(request, client)
+
 	prr := &github.NewPullRequest{
 		Title: r.getTitle(request),
 		Head:  r.getHead(request),
@@ -155,6 +158,47 @@ func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
 
 	logrus.Infof("pr %q opened for releasing new version", pr.GetHTMLURL())
 	return pr.GetHTMLURL(), nil
+}
+
+func (r *Releaser) closeExistingPR(request *source.ReleaseRequest, client *github.Client) error {
+	queryString := fmt.Sprintf("is:pr is:open author:%s repo:%s/%s release new version %s",
+		request.PluginReleaseActor,
+		r.UpstreamKrewIndexRepoOwner,
+		r.UpstreamKrewIndexRepo,
+		request.PluginName,
+	)
+	closeComment := fmt.Sprintf("Closing this PR as it's outdated\n\n/close")
+
+	existentPR, _, err := client.Search.Issues(
+		context.TODO(),
+		queryString,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	if numPR := existentPR.GetTotal(); numPR > 0 {
+		logrus.Infof("Found %d outdated PRs, closing them before opening this new one\n",
+			numPR,
+		)
+		for _, pr := range existentPR.Issues {
+			logrus.Infof("Closing outdated PR #%d\n", pr.GetNumber())
+			_, _, err := client.PullRequests.CreateComment(
+				context.TODO(),
+				r.UpstreamKrewIndexRepoOwner,
+				r.UpstreamKrewIndexRepo,
+				pr.GetNumber(),
+				&github.PullRequestComment{
+					Body: &closeComment,
+				},
+			)
+			if err != nil {
+				logrus.Errorf("Error closing the PR %d\n", pr.GetNumber())
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (r *Releaser) getTitle(request *source.ReleaseRequest) *string {
