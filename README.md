@@ -1,14 +1,18 @@
 <a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-release-bot.png" width="100"></a><span width="10px">
 
-`krew-release-bot` is a bot that automates the update of `krew-index` on the release of new version of your `krew` (or `kubectl`) plugin.
+`krew-release-bot` is a bot that automates the update of plugin manifests in `krew-index` when a new version of your `kubectl` plugin is released.
 
-You can use `github-action` that sends the event to the bot. This is the recommended way of publishing new release of your plugin. 
-
+To trigger `krew-release-bot` you can use a `github-action` which sends the event to the bot.
 
 # Basic Setup
 - Make sure you have enabled github actions for your repo
 - Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evict-pod) repo for an example.
-- Setup the action to be triggered on pushing of new tag, after the action that publishes the new release with assets. See `goreleaser` examples below.
+- To setup the action, add the following snippet after the step that publishes the new release and assets:
+  ```yaml
+  - name: Update new version in krew-index
+    uses: rajatjindal/krew-release-bot@v0.0.31
+  ```
+  Check out the `goreleaser` example below for details.
 
 ##### Example when using go-releaser
 
@@ -38,7 +42,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update new version in krew-index
-      uses: rajatjindal/krew-release-bot@v0.0.28
+      uses: rajatjindal/krew-release-bot@v0.0.31
 ```
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
