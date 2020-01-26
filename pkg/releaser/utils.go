@@ -71,7 +71,14 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 	}
 
 	logrus.Info("submitting the pr")
-	pr, err := releaser.submitPR(request)
+	pr, prID, err := releaser.submitPR(request)
+	if err != nil {
+		return "", err
+	}
+
+	logrus.Info("checking if there are outdated PRs")
+	// Close outdated PRs before submiting new one
+	err = releaser.closeExistingPR(request, prID)
 	if err != nil {
 		return "", err
 	}
