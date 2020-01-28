@@ -47,6 +47,10 @@ jobs:
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
 
+##### Examples for plugins based on other programming languages
+
+- [bash](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
+
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
 - only supports one plugin per git repo right now
