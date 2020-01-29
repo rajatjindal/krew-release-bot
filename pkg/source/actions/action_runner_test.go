@@ -200,16 +200,6 @@ func TestRunAction(t *testing.T) {
 			expectedError: `release with tag "v0.0.2" is a pre-release. skipping`,
 		},
 		{
-			name: "release do not have any assets",
-			setup: func() {
-				gock.New("https://api.github.com").
-					Get("/repos/foo-bar/my-awesome-plugin/releases/tags/v0.0.2").
-					Reply(200).
-					BodyString(releaseNoAssets)
-			},
-			expectedError: `no assets found for release with tag "v0.0.2"`,
-		},
-		{
 			name: "release have assets, but downloading them fails",
 			setup: func() {
 				gock.New("https://api.github.com").
