@@ -3,7 +3,6 @@ package source
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"path"
 	"text/template"
 
@@ -54,21 +53,10 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 		return "", nil, err
 	}
 
-	krewFile, err := ioutil.TempFile("", "krew-")
+	pluginName, err := krew.GetPluginName(buf.Bytes())
 	if err != nil {
 		return "", nil, err
 	}
 
-	err = ioutil.WriteFile(krewFile.Name(), buf.Bytes(), 0644)
-	if err != nil {
-		return "", nil, err
-	}
-
-	processedTemplate := buf.Bytes()
-	pluginName, err := krew.GetPluginName(krewFile.Name())
-	if err != nil {
-		return "", nil, err
-	}
-
-	return pluginName, processedTemplate, nil
+	return pluginName, buf.Bytes(), nil
 }
