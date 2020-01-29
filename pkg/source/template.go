@@ -12,6 +12,21 @@ import (
 
 //ProcessTemplate process the .krew.yaml template for the release request
 func ProcessTemplate(templateFile string, values interface{}) (string, []byte, error) {
+	spec, err := RenderTemplate(templateFile, values)
+	if err != nil {
+		return "", nil, err
+	}
+
+	pluginName, err := krew.GetPluginName(spec)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return pluginName, spec, nil
+}
+
+//RenderTemplate process the .krew.yaml template for the release request
+func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 	name := path.Base(templateFile)
 	t := template.New(name).Funcs(map[string]interface{}{
 		"addURIAndSha": func(url, tag string) string {
@@ -44,19 +59,14 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 
 	templateObject, err := t.ParseFiles(templateFile)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	buf := new(bytes.Buffer)
 	err = templateObject.Execute(buf, values)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	pluginName, err := krew.GetPluginName(buf.Bytes())
-	if err != nil {
-		return "", nil, err
-	}
-
-	return pluginName, buf.Bytes(), nil
+	return buf.Bytes(), nil
 }
