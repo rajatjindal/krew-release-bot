@@ -10,7 +10,7 @@ To trigger `krew-release-bot` you can use a `github-action` which sends the even
 - To setup the action, add the following snippet after the step that publishes the new release and assets:
   ```yaml
   - name: Update new version in krew-index
-    uses: rajatjindal/krew-release-bot@v0.0.31
+    uses: rajatjindal/krew-release-bot@v0.0.32
   ```
   Check out the `goreleaser` example below for details.
 
@@ -42,7 +42,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update new version in krew-index
-      uses: rajatjindal/krew-release-bot@v0.0.31
+      uses: rajatjindal/krew-release-bot@v0.0.32
 ```
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
