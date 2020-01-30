@@ -1,6 +1,7 @@
 package krew
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -37,8 +38,8 @@ func ValidatePlugin(name, file string) error {
 }
 
 //GetPluginName gets the plugin name from template .krew.yaml file
-func GetPluginName(file string) (string, error) {
-	plugin, err := indexscanner.ReadPluginFile(file)
+func GetPluginName(spec []byte) (string, error) {
+	plugin, err := indexscanner.DecodePluginFile(bytes.NewReader(spec))
 	if err != nil {
 		return "", err
 	}

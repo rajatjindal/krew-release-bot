@@ -1,6 +1,7 @@
 package krew
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,12 +29,6 @@ func TestGetPluginName(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name:          "file does not exist",
-			file:          "data/file-dont-exist.yaml",
-			expectedName:  "",
-			expectedError: "open data/file-dont-exist.yaml: no such file or directory",
-		},
-		{
 			name:          "invalid plugin file",
 			file:          "data/invalid-plugin-file.yaml",
 			expectedName:  "",
@@ -43,7 +38,8 @@ func TestGetPluginName(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			pluginName, err := GetPluginName(tc.file)
+			spec, _ := ioutil.ReadFile(tc.file)
+			pluginName, err := GetPluginName(spec)
 			assert.Equal(t, tc.expectedName, pluginName)
 
 			if tc.expectedError != "" {

@@ -3,7 +3,6 @@ package source
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"path"
 	"text/template"
 
@@ -11,8 +10,37 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//InvalidPluginSpecError is invalid plugin spec error
+type InvalidPluginSpecError struct {
+	Spec string
+	err  string
+}
+
+func (i InvalidPluginSpecError) Error() string {
+	return i.err
+}
+
 //ProcessTemplate process the .krew.yaml template for the release request
 func ProcessTemplate(templateFile string, values interface{}) (string, []byte, error) {
+	spec, err := RenderTemplate(templateFile, values)
+	if err != nil {
+		return "", nil, err
+	}
+
+	pluginName, err := krew.GetPluginName(spec)
+	if err != nil {
+		return "", nil, InvalidPluginSpecError{
+			err:  fmt.Sprintf("failed to get plugin name from processed template.\nerr: %s", err.Error()),
+			Spec: string(spec),
+		}
+	}
+
+	return pluginName, spec, nil
+}
+
+//RenderTemplate process the .krew.yaml template for the release request
+func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
+	logrus.Debugf("started processing of template %s", templateFile)
 	name := path.Base(templateFile)
 	t := template.New(name).Funcs(map[string]interface{}{
 		"addURIAndSha": func(url, tag string) string {
@@ -45,30 +73,15 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 
 	templateObject, err := t.ParseFiles(templateFile)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	buf := new(bytes.Buffer)
 	err = templateObject.Execute(buf, values)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	krewFile, err := ioutil.TempFile("", "krew-")
-	if err != nil {
-		return "", nil, err
-	}
-
-	err = ioutil.WriteFile(krewFile.Name(), buf.Bytes(), 0644)
-	if err != nil {
-		return "", nil, err
-	}
-
-	processedTemplate := buf.Bytes()
-	pluginName, err := krew.GetPluginName(krewFile.Name())
-	if err != nil {
-		return "", nil, err
-	}
-
-	return pluginName, processedTemplate, nil
+	logrus.Debugf("completed processing of template")
+	return buf.Bytes(), nil
 }

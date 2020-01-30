@@ -21,14 +21,28 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/krew/pkg/constants"
 	"sigs.k8s.io/krew/pkg/index"
 	"sigs.k8s.io/krew/pkg/index/validation"
 )
+
+func findPluginManifestFiles(indexDir string) ([]string, error) {
+	var out []string
+	files, err := ioutil.ReadDir(indexDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open index dir")
+	}
+	for _, file := range files {
+		if file.Mode().IsRegular() && filepath.Ext(file.Name()) == constants.ManifestExtension {
+			out = append(out, file.Name())
+		}
+	}
+	return out, nil
+}
 
 // LoadPluginListFromFS will parse and retrieve all plugin files.
 func LoadPluginListFromFS(indexDir string) ([]index.Plugin, error) {
@@ -37,28 +51,24 @@ func LoadPluginListFromFS(indexDir string) ([]index.Plugin, error) {
 		return nil, err
 	}
 
-	files, err := ioutil.ReadDir(indexDir)
+	files, err := findPluginManifestFiles(indexDir)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open index dir")
+		return nil, errors.Wrap(err, "failed to scan plugins in index directory")
 	}
+	klog.V(4).Infof("found %d plugins in dir %s", len(files), indexDir)
 
 	list := make([]index.Plugin, 0, len(files))
-	for _, f := range files {
-		if f.IsDir() {
-			continue
-		}
-
-		pluginName := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+	for _, file := range files {
+		pluginName := strings.TrimSuffix(file, filepath.Ext(file))
 		p, err := LoadPluginFileFromFS(indexDir, pluginName)
 		if err != nil {
 			// Index loading shouldn't fail because of one plugin.
 			// Show error instead.
-			glog.Errorf("failed to load file %q, err: %v", pluginName, err)
+			klog.Errorf("failed to read or parse plugin manifest %q: %v", pluginName, err)
 			continue
 		}
 		list = append(list, p)
 	}
-	glog.V(4).Infof("Found %d plugins in dir %s", len(list), indexDir)
 	return list, nil
 }
 
@@ -69,7 +79,7 @@ func LoadPluginFileFromFS(pluginsDir, pluginName string) (index.Plugin, error) {
 		return index.Plugin{}, errors.Errorf("plugin name %q not allowed", pluginName)
 	}
 
-	glog.V(4).Infof("Reading plugin %q", pluginName)
+	klog.V(4).Infof("Reading plugin %q", pluginName)
 	pluginsDir, err := filepath.EvalSymlinks(pluginsDir)
 	if err != nil {
 		return index.Plugin{}, err
