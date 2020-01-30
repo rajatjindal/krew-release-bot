@@ -10,6 +10,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//InvalidPluginSpecError is invalid plugin spec error
+type InvalidPluginSpecError struct {
+	Spec string
+	err  string
+}
+
+func (i InvalidPluginSpecError) Error() string {
+	return i.err
+}
+
 //ProcessTemplate process the .krew.yaml template for the release request
 func ProcessTemplate(templateFile string, values interface{}) (string, []byte, error) {
 	spec, err := RenderTemplate(templateFile, values)
@@ -19,7 +29,10 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 
 	pluginName, err := krew.GetPluginName(spec)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to get plugin name from processed template.\nerr: %s\n\n\n%s", err.Error(), string(spec))
+		return "", nil, InvalidPluginSpecError{
+			err:  fmt.Sprintf("failed to get plugin name from processed template.\nerr: %s", err.Error()),
+			Spec: string(spec),
+		}
 	}
 
 	return pluginName, spec, nil

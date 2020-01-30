@@ -51,6 +51,14 @@ jobs:
 
 - [bash](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
 
+# Testing the template file
+
+You can test the template file rendering before check-in to the repo by running following command
+```bash
+$ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml rajatjindal/krew-release-bot:v0.0.32 \
+  krew-release-bot template --tag <tag-name> --template-file /tmp/template-file.yaml
+```
+
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
 - only supports one plugin per git repo right now
