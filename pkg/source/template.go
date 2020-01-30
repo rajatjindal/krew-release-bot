@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/krew"
@@ -18,6 +19,18 @@ type InvalidPluginSpecError struct {
 
 func (i InvalidPluginSpecError) Error() string {
 	return i.err
+}
+
+// for backward compatibility
+// by default addURIAndSha assumed 4 spaces indent
+func fixShaIndentation(v string) string {
+	return strings.Replace(v, "    sha256:", "sha256:", -1)
+}
+
+func indent(spaces int, v string) string {
+	v = fixShaIndentation(v)
+	pad := strings.Repeat(" ", spaces)
+	return pad + strings.Replace(v, "\n", "\n"+pad, -1)
 }
 
 //ProcessTemplate process the .krew.yaml template for the release request
