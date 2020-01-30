@@ -19,7 +19,7 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 
 	pluginName, err := krew.GetPluginName(spec)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to get plugin name from processed template.\nerr: %s\n\n\n%s", err.Error(), string(spec))
 	}
 
 	return pluginName, spec, nil
@@ -27,6 +27,7 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 
 //RenderTemplate process the .krew.yaml template for the release request
 func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
+	logrus.Debugf("started processing of template %s", templateFile)
 	name := path.Base(templateFile)
 	t := template.New(name).Funcs(map[string]interface{}{
 		"addURIAndSha": func(url, tag string) string {
@@ -68,5 +69,6 @@ func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 		return nil, err
 	}
 
+	logrus.Debugf("completed processing of template")
 	return buf.Bytes(), nil
 }
