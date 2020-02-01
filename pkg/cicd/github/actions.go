@@ -1,4 +1,4 @@
-package githubactions
+package github
 
 import (
 	"fmt"
