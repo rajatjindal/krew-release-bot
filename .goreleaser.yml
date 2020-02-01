@@ -1,6 +1,6 @@
 builds:
 - id: krew-release-bot
-  main: ./cmd/action/*
+  main: ./cmd/action/
   binary: krew-release-bot
   env:
   - CGO_ENABLED=0
