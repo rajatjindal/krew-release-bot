@@ -1,0 +1,19 @@
+---
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: whoami
+spec:
+  version: v0.0.2
+  homepage: https://github.com/rajatjindal/kubectl-whoami
+  platforms:
+  - uri: https://github.com/rajatjindal/kubectl-whoami/releases/download/v0.0.2/kubectl-whoami_v0.0.2_darwin_amd64.tar.gz
+    sha256: d9336538c1469e9ced64c5ee3f9c1bf7b7ef80ccc656c73bc244de35dfbf69d4
+    selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    files:
+    - from: "*"
+        to: "."
+    bin: kubectl-whoami
