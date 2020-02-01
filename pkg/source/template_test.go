@@ -18,7 +18,7 @@ func TestFixIndent(t *testing.T) {
 			input: `uri: some-secure-uri
 sha256: some-sha256`,
 			indent: 4,
-			output: `    uri: some-secure-uri
+			output: `uri: some-secure-uri
     sha256: some-sha256`,
 		},
 		{
@@ -26,7 +26,7 @@ sha256: some-sha256`,
 			input: `uri: some-secure-uri
     sha256: some-sha256`,
 			indent: 6,
-			output: `      uri: some-secure-uri
+			output: `uri: some-secure-uri
       sha256: some-sha256`,
 		},
 	}

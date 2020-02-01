@@ -30,7 +30,7 @@ func fixShaIndentation(v string) string {
 func indent(spaces int, v string) string {
 	v = fixShaIndentation(v)
 	pad := strings.Repeat(" ", spaces)
-	return pad + strings.Replace(v, "\n", "\n"+pad, -1)
+	return strings.TrimSpace(pad + strings.Replace(v, "\n", "\n"+pad, -1))
 }
 
 //ProcessTemplate process the .krew.yaml template for the release request
@@ -56,6 +56,7 @@ func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 	logrus.Debugf("started processing of template %s", templateFile)
 	name := path.Base(templateFile)
 	t := template.New(name).Funcs(map[string]interface{}{
+		"indent": indent,
 		"addURIAndSha": func(url, tag string) string {
 			t := struct {
 				TagName string
