@@ -47,9 +47,10 @@ jobs:
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
 
-##### Examples for plugins based on other programming languages
+##### Examples for Github Action workflows using krew-release-bot in different ways
 
-- [bash](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
+- [bash based plugins](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
+- [multiple plugins published from one repo](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
 
 # Testing the template file
 
@@ -58,6 +59,14 @@ You can test the template file rendering before check-in to the repo by running 
 $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml rajatjindal/krew-release-bot:v0.0.33 \
   krew-release-bot template --tag <tag-name> --template-file /tmp/template-file.yaml
 ```
+
+# Inputs for the action
+
+| Key           | Default Value | Description |
+| ------------- | ------------- | ----------- |
+| workdir     | `env.GITHUB_WORKSPACE`  | Overrides the GitHub workspace directory path |
+| krew_template_file  | `.krew.yaml`  | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
+
 
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
