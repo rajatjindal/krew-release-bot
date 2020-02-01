@@ -1,0 +1,20 @@
+builds:
+- id: krew-release-bot
+  main: ./cmd/action/*
+  binary: krew-release-bot
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - darwin
+  - linux
+  goarch:
+  - amd64
+
+archives:
+- builds:
+  - krew-release-bot
+  name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  wrap_in_directory: false
+  format: tar.gz
+  files:
+  - LICENSE
