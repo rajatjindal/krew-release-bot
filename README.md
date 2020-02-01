@@ -10,7 +10,7 @@ To trigger `krew-release-bot` you can use a `github-action` which sends the even
 - To setup the action, add the following snippet after the step that publishes the new release and assets:
   ```yaml
   - name: Update new version in krew-index
-    uses: rajatjindal/krew-release-bot@v0.0.32
+    uses: rajatjindal/krew-release-bot@v0.0.33
   ```
   Check out the `goreleaser` example below for details.
 
@@ -42,7 +42,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update new version in krew-index
-      uses: rajatjindal/krew-release-bot@v0.0.32
+      uses: rajatjindal/krew-release-bot@v0.0.33
 ```
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
@@ -55,7 +55,7 @@ jobs:
 
 You can test the template file rendering before check-in to the repo by running following command
 ```bash
-$ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml rajatjindal/krew-release-bot:v0.0.32 \
+$ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml rajatjindal/krew-release-bot:v0.0.33 \
   krew-release-bot template --tag <tag-name> --template-file /tmp/template-file.yaml
 ```
 

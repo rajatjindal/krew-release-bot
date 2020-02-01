@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/krew"
@@ -18,6 +19,18 @@ type InvalidPluginSpecError struct {
 
 func (i InvalidPluginSpecError) Error() string {
 	return i.err
+}
+
+// for backward compatibility
+// by default addURIAndSha assumed 4 spaces indent
+func fixShaIndentation(v string) string {
+	return strings.Replace(v, "    sha256:", "sha256:", -1)
+}
+
+func indent(spaces int, v string) string {
+	v = fixShaIndentation(v)
+	pad := strings.Repeat(" ", spaces)
+	return strings.TrimSpace(pad + strings.Replace(v, "\n", "\n"+pad, -1))
 }
 
 //ProcessTemplate process the .krew.yaml template for the release request
@@ -43,6 +56,7 @@ func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 	logrus.Debugf("started processing of template %s", templateFile)
 	name := path.Base(templateFile)
 	t := template.New(name).Funcs(map[string]interface{}{
+		"indent": indent,
 		"addURIAndSha": func(url, tag string) string {
 			t := struct {
 				TagName string
