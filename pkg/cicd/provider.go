@@ -3,6 +3,7 @@ package cicd
 import (
 	"os"
 
+	"github.com/rajatjindal/krew-release-bot/pkg/cicd/circleci"
 	githubactions "github.com/rajatjindal/krew-release-bot/pkg/cicd/github"
 )
 
@@ -20,6 +21,10 @@ type Provider interface {
 func GetProvider() Provider {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return &githubactions.Provider{}
+	}
+
+	if os.Getenv("CIRCLECI") == "true" {
+		return &circleci.Provider{}
 	}
 
 	return nil
