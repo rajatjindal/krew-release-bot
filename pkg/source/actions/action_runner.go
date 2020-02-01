@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v29/github"
-	"github.com/rajatjindal/krew-release-bot/pkg/provider"
+	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 )
@@ -19,7 +19,7 @@ import (
 //RunAction runs the github action
 func RunAction() error {
 	client := github.NewClient(nil)
-	provider := provider.GetProvider()
+	provider := cicd.GetProvider()
 
 	if provider == nil {
 		logrus.Fatal("failed to identify the CI/CD provider")

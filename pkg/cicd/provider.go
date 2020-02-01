@@ -1,12 +1,12 @@
-package provider
+package cicd
 
 import (
 	"os"
 
-	githubactions "github.com/rajatjindal/krew-release-bot/pkg/provider/github"
+	githubactions "github.com/rajatjindal/krew-release-bot/pkg/cicd/github"
 )
 
-//Provider defines provider interface
+//Provider defines CI/CD provider interface
 type Provider interface {
 	GetTag() (string, error)
 	GetActor() (string, error)
