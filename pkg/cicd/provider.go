@@ -5,6 +5,7 @@ import (
 
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/circleci"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/github"
+	"github.com/rajatjindal/krew-release-bot/pkg/cicd/travisci"
 )
 
 //Provider defines CI/CD provider interface
@@ -25,6 +26,10 @@ func GetProvider() Provider {
 
 	if os.Getenv("CIRCLECI") == "true" {
 		return &circleci.Provider{}
+	}
+
+	if os.Getenv("TRAVIS") == "true" {
+		return &travisci.Provider{}
 	}
 
 	return nil
