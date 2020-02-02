@@ -147,6 +147,44 @@ func assertError(t *testing.T, expectedError string, err error) {
 	}
 }
 
+func TestGetWorkingDirectory(t *testing.T) {
+	testcases := []struct {
+		name        string
+		setup       func()
+		expectedDir string
+	}{
+		{
+			name: "env CIRCLE_WORKING_DIRECTORY is setup",
+			setup: func() {
+				os.Setenv("CIRCLE_WORKING_DIRECTORY", "./data")
+			},
+			expectedDir: "./data",
+		},
+		{
+			name: "env CIRCLE_WORKING_DIRECTORY is set to ~/project",
+			setup: func() {
+				os.Setenv("HOME", "/home/circleci")
+				os.Setenv("CIRCLE_WORKING_DIRECTORY", "~/project")
+			},
+			expectedDir: "/home/circleci/project",
+		},
+	}
+
+	p := &Provider{}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			os.Clearenv()
+
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			dir := p.GetWorkDirectory()
+			assert.Equal(t, tc.expectedDir, dir)
+		})
+	}
+}
+
 func setupEnvironment() {
 	os.Setenv("CIRCLE_PROJECT_USERNAME", "foo-bar")
 	os.Setenv("CIRCLE_PROJECT_REPONAME", "my-awesome-plugin")
