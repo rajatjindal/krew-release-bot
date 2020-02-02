@@ -47,7 +47,7 @@ jobs:
 
 ** You can also customize the release assets names, platforms for which build is done using .goreleaser.yml file in root of your git repo.
 
-##### Examples using krew-release-bot in different ways
+# Examples using krew-release-bot in different ways
 
 - [bash based plugins](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
 - [multiple plugins published from one repo](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
