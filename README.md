@@ -51,6 +51,8 @@ jobs:
 
 - [bash based plugins](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
 - [multiple plugins published from one repo](https://github.com/ahmetb/kubectx/blob/master/.github/workflows/release.yml)
+- [circle-ci](examples/circleci.yml)
+- [travis-ci](examples/travis.yml)
 
 # Testing the template file
 
