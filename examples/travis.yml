@@ -1,0 +1,14 @@
+if: tag IS present
+
+## Following env helps you test your setup without actually publishing to kubernetes-sigs/krew-index
+## remove this env when you are ready for real release
+env:
+  - KREW_RELEASE_BOT_WEBHOOK_URL=https://krew-release-bot-dryrun.rajatjindal.com/github-action-webhook
+  
+sudo: false
+
+script:
+  - curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/v0.0.35/krew-release-bot_v0.0.35_linux_amd64.tar.gz
+  - tar -xvf krew-release-bot_v0.0.35_linux_amd64.tar.gz
+  - printenv && pwd && ls -ltr
+  - ./krew-release-bot action
