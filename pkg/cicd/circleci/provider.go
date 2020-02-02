@@ -57,7 +57,14 @@ func (p *Provider) GetWorkDirectory() string {
 		return workdirInput
 	}
 
-	return os.Getenv("CIRCLE_WORKING_DIRECTORY")
+	dir := os.Getenv("CIRCLE_WORKING_DIRECTORY")
+
+	//workaround for https://discuss.circleci.com/t/circle-working-directory-doesnt-expand/17007/3
+	if dir == "~/project" {
+		return filepath.Join(os.Getenv("HOME"), "project")
+	}
+
+	return dir
 }
 
 //GetTemplateFile returns the template file
