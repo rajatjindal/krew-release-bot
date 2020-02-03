@@ -14,11 +14,21 @@ import (
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 )
+
+func getHTTPClient() *http.Client {
+	if os.Getenv("GITHUB_TOKEN") != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
+		return oauth2.NewClient(context.TODO(), ts)
+	}
+
+	return nil
+}
 
 //RunAction runs the github action
 func RunAction() error {
-	client := github.NewClient(nil)
+	client := github.NewClient(getHTTPClient())
 	provider := cicd.GetProvider()
 
 	if provider == nil {
