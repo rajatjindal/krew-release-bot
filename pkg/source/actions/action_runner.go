@@ -19,6 +19,7 @@ import (
 
 func getHTTPClient() *http.Client {
 	if os.Getenv("GITHUB_TOKEN") != "" {
+		logrus.Info("GITHUB_TOKEN env variable found, using authenticated requests.")
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
 		return oauth2.NewClient(context.TODO(), ts)
 	}
