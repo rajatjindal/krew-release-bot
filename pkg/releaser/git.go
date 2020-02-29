@@ -168,7 +168,7 @@ func (r *Releaser) getTitle(request *source.ReleaseRequest) *string {
 }
 
 func (r *Releaser) getBranchName(request *source.ReleaseRequest) *string {
-	s := fmt.Sprintf("%s-%s-%s", request.PluginOwner, request.PluginRepo, request.TagName)
+	s := fmt.Sprintf("%s-%s-%s-%s", request.PluginOwner, request.PluginName, request.PluginRepo, request.TagName)
 	fmt.Printf("creating branch %s", s)
 	return github.String(s)
 }
