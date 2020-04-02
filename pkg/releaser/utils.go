@@ -80,7 +80,7 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 	// Close outdated PRs before submiting new one
 	err = releaser.closeExistingPR(request, prID)
 	if err != nil {
-		return "", err
+		logrus.Warnf("Failed to close outdated PR %d", prID)
 	}
 
 	return pr, nil
