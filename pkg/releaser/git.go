@@ -182,15 +182,14 @@ func (r *Releaser) getHead(request *source.ReleaseRequest) *string {
 func (r *Releaser) getPRBody(request *source.ReleaseRequest) *string {
 	prBody := `hey krew-index team,
 
-I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I would like to open this PR to publish version %s of %s on behalf of [%s](https://github.com/%s).
+I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I would like to open this PR to publish version %s of %s on behalf of @%s.
 
 Thanks,
-[krew-release-bot](https://github.com/rajatjindal/krew-release-bot)`
+@krew-release-bot`
 
 	s := fmt.Sprintf(prBody,
 		fmt.Sprintf("`%s`", request.TagName),
 		fmt.Sprintf("`%s`", request.PluginName),
-		request.PluginReleaseActor,
 		request.PluginReleaseActor,
 	)
 
