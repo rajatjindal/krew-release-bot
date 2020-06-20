@@ -1,5 +1,6 @@
 [build]
   command = "make lambda"
   functions = "functions"
+  publish = "dist"
 [build.environment]
   GO_IMPORT_PATH = "github.com/rajatjindal/krew-release-bot"
