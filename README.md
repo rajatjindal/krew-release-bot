@@ -7,6 +7,7 @@ To trigger `krew-release-bot` you can use a `github-action` which sends the even
 # Basic Setup
 - Make sure you have enabled github actions for your repo
 - Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evict-pod) repo for an example.
+  - you could use https://rajatjindal.com/tools/krew-release-bot-helper/ for generating template for your plugin
 - To setup the action, add the following snippet after the step that publishes the new release and assets:
   ```yaml
   - name: Update new version in krew-index
