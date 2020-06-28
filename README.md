@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/cfd72dea-e22a-463b-8e20-5748b743140a/deploy-status)](https://app.netlify.com/sites/angry-borg-f9dd47/deploys)
+
 <a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-release-bot.png" width="100"></a><span width="10px">
 
 `krew-release-bot` is a bot that automates the update of plugin manifests in `krew-index` when a new version of your `kubectl` plugin is released.
@@ -5,6 +7,7 @@
 To trigger `krew-release-bot` you can use a `github-action` which sends the event to the bot.
 
 # Basic Setup
+
 - Make sure you have enabled github actions for your repo
 - Add a `.krew.yaml` template file at the root of your repo. Refer to [kubectl-evict-pod](https://github.com/rajatjindal/kubectl-evict-pod) repo for an example.
   - you could use https://rajatjindal.com/tools/krew-release-bot-helper/ for generating template for your plugin
