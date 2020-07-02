@@ -76,7 +76,6 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml rajatji
 
 # Limitations of krew-release-bot
 - only works for repos hosted on github right now
-- only supports one plugin per git repo right now
 - The first version of plugin has to be submitted manually, by plugin author, to the krew-index repo
 - The homepage in the plugin spec in krew-index is used to establish ownership. The repo from which the release is published should be the homepage of the plugin in already released plugin-spec.
 
