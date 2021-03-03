@@ -1,4 +1,4 @@
-FROM golang:1.13.4-alpine3.10 as builder
+FROM golang:1.15.8-alpine3.13 as builder
 
 WORKDIR /go/src/github.com/rajatjindal/krew-release-bot
 COPY . .
