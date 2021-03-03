@@ -6,7 +6,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go test -mod vendor ./... -cover
 RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor --ldflags "-s -w" -o krew-release-bot cmd/action/*
 
-FROM alpine:3.10.3
+FROM alpine:3.13.2
 
 RUN mkdir -p /home/app
 
