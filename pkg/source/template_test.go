@@ -67,15 +67,15 @@ func TestRenderTemplate(t *testing.T) {
 		},
 	}
 
+	values := ReleaseRequest{
+		TagName: "v0.0.2",
+	}
+
 	setup := func() {
 		gock.New("https://github.com").
 			Get("/rajatjindal/kubectl-whoami/releases/download/v0.0.2/kubectl-whoami_v0.0.2_darwin_amd64.tar.gz").
 			Reply(200).
 			BodyString("my-plugin-binary")
-	}
-
-	values := ReleaseRequest{
-		TagName: "v0.0.2",
 	}
 
 	for _, tc := range testcases {
