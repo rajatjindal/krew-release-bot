@@ -40,6 +40,7 @@ func TestRunAction(t *testing.T) {
 			name: "no release info found for the tag",
 			setup: func() {
 				gock.New("https://api.github.com").
+					Times(4).
 					Get("/repos/foo-bar/my-awesome-plugin/releases/tags/v0.0.2").
 					Reply(404).
 					BodyString("no release with tag v0.0.2 found")
@@ -79,6 +80,7 @@ func TestRunAction(t *testing.T) {
 					BodyString(releaseWithAssets)
 
 				gock.New("https://github.com").
+					Times(4).
 					Get("/foo-bar/my-awesome-plugin/releases/download/v0.0.2/darwin-amd64-v0.0.2.tar.gz").
 					Reply(404).
 					BodyString("darwin-amd64-v0.0.2.tar.gz not found")
@@ -112,6 +114,7 @@ func TestRunAction(t *testing.T) {
 					Post("/github-action-webhook").
 					Reply(200).
 					JSON("PR https://github.com/kubernetes-sigs/krew-index/pull/26 opened successfully")
+
 			},
 		},
 	}

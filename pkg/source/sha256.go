@@ -14,9 +14,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const retries = 4
+
 //DownloadFileWithName downloads a file with name
 func DownloadFileWithName(uri, name string) (string, error) {
-	resp, err := http.Get(uri)
+	resp, err := getWithRetry(uri)
 	if err != nil {
 		return "", err
 	}

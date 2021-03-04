@@ -1,6 +1,8 @@
 package source
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"io/ioutil"
@@ -65,15 +67,15 @@ func TestRenderTemplate(t *testing.T) {
 		},
 	}
 
-	values := ReleaseRequest{
-		TagName: "v0.0.2",
-	}
-
 	setup := func() {
 		gock.New("https://github.com").
 			Get("/rajatjindal/kubectl-whoami/releases/download/v0.0.2/kubectl-whoami_v0.0.2_darwin_amd64.tar.gz").
 			Reply(200).
 			BodyString("my-plugin-binary")
+	}
+
+	values := ReleaseRequest{
+		TagName: "v0.0.2",
 	}
 
 	for _, tc := range testcases {
@@ -94,4 +96,20 @@ func TestRenderTemplate(t *testing.T) {
 			assert.Equal(t, string(expectedOut), string(output))
 		})
 	}
+}
+
+func TestRenderTemplateRetry(t *testing.T) {
+	retries := 0
+	handler := http.NewServeMux()
+	handler.HandleFunc("/rajatjindal/kubectl-whoami/releases/download/v0.0.2/kubectl-whoami_v0.0.2_darwin_amd64.tar.gz", func(w http.ResponseWriter, r *http.Request) {
+		retries++
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
+
+	_, err := DownloadFileWithName(srv.URL+"/rajatjindal/kubectl-whoami/releases/download/v0.0.2/kubectl-whoami_v0.0.2_darwin_amd64.tar.gz", "whoami")
+	assert.NotNil(t, err)
+	assert.Equal(t, 4, retries)
 }
