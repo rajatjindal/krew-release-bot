@@ -37,17 +37,7 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 		return "", err
 	}
 
-	logrus.Info("validating ownership")
 	existingIndexFile := filepath.Join(tempdir, "plugins", krew.PluginFileName(request.PluginName))
-	err = krew.ValidateOwnership(existingIndexFile, request.PluginOwner)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return "", fmt.Errorf("plugin %q not found in existing repo. The first release of a new plugin has to be done manually", request.PluginName)
-		}
-
-		return "", fmt.Errorf("failed when validating ownership with error: %s", err.Error())
-	}
-
 	logrus.Info("update plugin manifest with latest release info")
 	err = krew.ValidatePlugin(request.PluginName, newIndexFile.Name())
 	if err != nil {
