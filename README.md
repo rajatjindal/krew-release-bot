@@ -3,6 +3,7 @@
 <a href="https://github.com/rajatjindal/krew-release-bot"><img src="https://github.com/krew-release-bot.png" width="100"></a><span width="10px">
 
 `krew-release-bot` is a bot that automates the update of plugin manifests in `krew-index` when a new version of your `kubectl` plugin is released.
+If a release is marked as a 'prerelease' in github, it will not be released to the krew index.
 
 To trigger `krew-release-bot` you can use a `github-action` which sends the event to the bot.
 
