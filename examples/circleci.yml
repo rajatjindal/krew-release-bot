@@ -3,7 +3,7 @@ version: 2
 jobs:
   update-krew-index:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           
           ## KREW_RELEASE_BOT_WEBHOOK_URL env helps you test your setup without actually publishing to kubernetes-sigs/krew-index
