@@ -4,11 +4,11 @@ if: tag IS present
 ## remove this env when you are ready for real release
 env:
   - KREW_RELEASE_BOT_WEBHOOK_URL=https://krew-release-bot-dryrun.rajatjindal.com/github-action-webhook
-  
+
 sudo: false
 
 script:
-  - curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/v0.0.39/krew-release-bot_v0.0.38_linux_amd64.tar.gz
-  - tar -xvf krew-release-bot_v0.0.39_linux_amd64.tar.gz
+  - curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/v0.0.40/krew-release-bot_v0.0.40_linux_amd64.tar.gz
+  - tar -xvf krew-release-bot_v0.0.40_linux_amd64.tar.gz
   - printenv && pwd && ls -ltr
   - ./krew-release-bot action

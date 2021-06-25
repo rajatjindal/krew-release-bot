@@ -1,11 +1,11 @@
 # action.yml
-name: 'krew-release-bot'
-description: 'automatically opens PR for upstream krew-index repo when you publish new release of your awesome plugin'
+name: "krew-release-bot"
+description: "automatically opens PR for upstream krew-index repo when you publish new release of your awesome plugin"
 runs:
-  using: 'docker'
-  image: 'docker://rajatjindal/krew-release-bot:v0.0.39'
+  using: "docker"
+  image: "docker://rajatjindal/krew-release-bot:v0.0.40"
 inputs:
   workdir:
-    description: 'Working directory, defaults to env.GITHUB_WORKSPACE'
+    description: "Working directory, defaults to env.GITHUB_WORKSPACE"
   krew_template_file:
-    description: 'the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml'
+    description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"

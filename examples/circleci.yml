@@ -5,12 +5,11 @@ jobs:
     docker:
       - image: circleci/golang:1.16
         environment:
-          
           ## KREW_RELEASE_BOT_WEBHOOK_URL env helps you test your setup without actually publishing to kubernetes-sigs/krew-index
           ## remove this env when you are ready for real release
 
           KREW_RELEASE_BOT_WEBHOOK_URL: https://krew-release-bot-dryrun.rajatjindal.com/github-action-webhook
-          KREW_RELEASE_BOT_VERSION: v0.0.39
+          KREW_RELEASE_BOT_VERSION: v0.0.40
     steps:
       - checkout
       - run: |
@@ -18,7 +17,6 @@ jobs:
           curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/${KREW_RELEASE_BOT_VERSION}/krew-release-bot_${KREW_RELEASE_BOT_VERSION}_linux_amd64.tar.gz
           tar -xvf krew-release-bot_${KREW_RELEASE_BOT_VERSION}_linux_amd64.tar.gz
       - run: ./krew-release-bot action
-
 
 workflows:
   version: 2
