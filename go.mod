@@ -1,6 +1,6 @@
 module github.com/rajatjindal/krew-release-bot
 
-go 1.13
+go 1.16
 
 require (
 	github.com/aws/aws-lambda-go v1.17.0
