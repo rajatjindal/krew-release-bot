@@ -1,4 +1,4 @@
-FROM golang:1.16.5-alpine3.13 as builder
+FROM golang:1.17.3-alpine3.14 as builder
 
 WORKDIR /go/src/github.com/rajatjindal/krew-release-bot
 COPY . .
@@ -6,7 +6,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go test -mod vendor ./... -cover
 RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor --ldflags "-s -w" -o krew-release-bot cmd/action/*
 
-FROM alpine:3.13.5
+FROM alpine:3.14.3
 
 RUN mkdir -p /home/app
 
