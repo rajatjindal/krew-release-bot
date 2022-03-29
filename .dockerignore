@@ -1,0 +1,13 @@
+# ignore sensitive information
+.git
+.github
+
+# misc
+*.md
+*.sh
+*.toml
+Dockerfile
+LICENSE
+Makefile
+examples
+examples/*
