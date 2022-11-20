@@ -113,3 +113,27 @@ func TestRenderTemplateRetry(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, 4, retries)
 }
+
+func Test_extractVersionFromTag(t *testing.T) {
+	tests := []struct {
+		name   string
+		tag    string
+		expect string
+	}{
+		{
+			name:   "should extract version from tag if defined",
+			tag:    "v0.0.2",
+			expect: "0.0.2",
+		},
+		{
+			name:   "should return tag as version if not defined in tag",
+			tag:    "no-version",
+			expect: "no-version",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.expect, extractVersionFromTag(tt.tag), "extractVersionFromTag(%v)", tt.tag)
+		})
+	}
+}

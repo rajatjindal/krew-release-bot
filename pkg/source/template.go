@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//InvalidPluginSpecError is invalid plugin spec error
+// InvalidPluginSpecError is invalid plugin spec error
 type InvalidPluginSpecError struct {
 	Spec string
 	err  string
@@ -33,7 +34,16 @@ func indent(spaces int, v string) string {
 	return strings.TrimSpace(pad + strings.Replace(v, "\n", "\n"+pad, -1))
 }
 
-//ProcessTemplate process the .krew.yaml template for the release request
+func extractVersionFromTag(tag string) string {
+	r, _ := regexp.Compile("\\d+(\\.\\d+)+")
+	v := r.FindString(tag)
+	if v == "" {
+		v = tag
+	}
+	return v
+}
+
+// ProcessTemplate process the .krew.yaml template for the release request
 func ProcessTemplate(templateFile string, values interface{}) (string, []byte, error) {
 	spec, err := RenderTemplate(templateFile, values)
 	if err != nil {
@@ -51,7 +61,7 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 	return pluginName, spec, nil
 }
 
-//RenderTemplate process the .krew.yaml template for the release request
+// RenderTemplate process the .krew.yaml template for the release request
 func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 	logrus.Debugf("started processing of template %s", templateFile)
 	name := path.Base(templateFile)
@@ -60,8 +70,10 @@ func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 		"addURIAndSha": func(url, tag string) string {
 			t := struct {
 				TagName string
+				Version string
 			}{
 				TagName: tag,
+				Version: extractVersionFromTag(tag),
 			}
 			buf := new(bytes.Buffer)
 			temp, err := template.New("url").Parse(url)
