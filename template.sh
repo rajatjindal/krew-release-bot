@@ -1,4 +1,4 @@
 #! /bin/bash
 
-VERSION=v0.0.43
-docker run --rm -v `pwd`:/home/app rajatjindal/krew-release-bot:$VERSION krew-release-bot template 
+VERSION=v0.0.44
+docker run --rm -v `pwd`:/home/app ghcr.io/rajatjindal/krew-release-bot:$VERSION krew-release-bot template 
