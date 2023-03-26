@@ -11,6 +11,7 @@ builds:
   - amd64
 
 archives:
+
 - builds:
   - krew-release-bot
   name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"

@@ -4,12 +4,15 @@ jobs:
   TestPR:
     runs-on: ubuntu-latest
     steps:
+
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
     - name: Setup Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v4
       with:
-        go-version: 1.17
+        go-version: '1.20'
+
     - name: Run unit tests
       run: |
-        go test -mod vendor ./... -cover
+        pwd && ls -ltr && go version && go test -mod vendor ./... -cover
