@@ -36,9 +36,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
       - name: Setup Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.16
+          go-version: 1.20
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
