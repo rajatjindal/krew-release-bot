@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -27,7 +27,7 @@ const (
 	OriginNameLocal = "local"
 )
 
-//CloneRepos clones the repo
+// CloneRepos clones the repo
 func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
 	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
 	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
@@ -61,7 +61,7 @@ func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit
 	return repo, nil
 }
 
-//CreateBranch creates branch
+// CreateBranch creates branch
 func (r *Releaser) createBranch(repo *ugit.Repository, branchName string) error {
 	w, err := repo.Worktree()
 	if err != nil {
@@ -87,13 +87,13 @@ func (r *Releaser) createBranch(repo *ugit.Repository, branchName string) error 
 	})
 }
 
-//commitConfig is a git commit
+// commitConfig is a git commit
 type commitConfig struct {
 	Msg        string
 	RemoteName string
 }
 
-//AddCommitAndPush commits and push
+// AddCommitAndPush commits and push
 func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, request *source.ReleaseRequest) error {
 	w, err := repo.Worktree()
 	if err != nil {
@@ -123,7 +123,7 @@ func getPushRefSpec(branchName string) string {
 	return fmt.Sprintf("refs/heads/%s:refs/heads/%s", branchName, branchName)
 }
 
-//SubmitPR submits the PR
+// SubmitPR submits the PR
 func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: r.Token})
 	tc := oauth2.NewClient(context.TODO(), ts)

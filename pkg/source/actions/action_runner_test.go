@@ -170,14 +170,6 @@ const releaseWithAssets = `{
 	]
 }`
 
-const releaseNoAssets = `{
-	"id": 22569944,
-	"tag_name": "v0.0.2",
-	"name": "v0.0.2",
-	"prerelease": false,
-	"assets": []
-}`
-
 func setupEnvironment() {
 	os.Setenv("GITHUB_REPOSITORY", "foo-bar/my-awesome-plugin")
 	os.Setenv("GITHUB_ACTOR", "karthik-aryan")

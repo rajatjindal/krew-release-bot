@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
@@ -27,7 +27,7 @@ func getHTTPClient() *http.Client {
 	return nil
 }
 
-//RunAction runs the github action
+// RunAction runs the github action
 func RunAction() error {
 	client := github.NewClient(getHTTPClient())
 	provider := cicd.GetProvider()
@@ -120,7 +120,7 @@ func submitForPR(request *source.ReleaseRequest) (string, error) {
 	}
 
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
