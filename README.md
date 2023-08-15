@@ -38,7 +38,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.20
+          go-version: '1.20'
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
