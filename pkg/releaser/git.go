@@ -9,9 +9,7 @@ import (
 	"github.com/google/go-github/v66/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
-	ugit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -28,12 +26,17 @@ const (
 )
 
 // CloneRepos clones the repo
-func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
+func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*git.Repository, error) {
 	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
-	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
+	remoteRepo, err := r.getRepo(r.Client, r.UpstreamKrewIndexRepoOwner, r.UpstreamKrewIndexRepoName)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
 		URL:           r.UpstreamKrewIndexRepoCloneURL,
 		Progress:      os.Stdout,
-		ReferenceName: plumbing.Master,
+		ReferenceName: plumbing.ReferenceName(*remoteRepo.DefaultBranch),
 		SingleBranch:  true,
 		Auth:          r.getAuth(),
 		RemoteName:    OriginNameUpstream,
@@ -62,7 +65,7 @@ func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit
 }
 
 // CreateBranch creates branch
-func (r *Releaser) createBranch(repo *ugit.Repository, branchName string) error {
+func (r *Releaser) createBranch(repo *git.Repository, branchName string) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -94,7 +97,7 @@ type commitConfig struct {
 }
 
 // AddCommitAndPush commits and push
-func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, request *source.ReleaseRequest) error {
+func (r *Releaser) addCommitAndPush(repo *git.Repository, commit commitConfig, request *source.ReleaseRequest) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -119,7 +122,7 @@ func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, 
 	branchName := r.getBranchName(request)
 	pushRef := getPushRefSpec(*branchName)
 
-	return repo.Push(&ugit.PushOptions{
+	return repo.Push(&git.PushOptions{
 		RemoteName: commit.RemoteName,
 		RefSpecs:   []config.RefSpec{config.RefSpec(pushRef)},
 		Auth:       r.getAuth(),
@@ -130,30 +133,39 @@ func getPushRefSpec(branchName string) string {
 	return fmt.Sprintf("refs/heads/%s:refs/heads/%s", branchName, branchName)
 }
 
+func (r *Releaser) getRepo(client *github.Client, owner string, repoName string) (*github.Repository, error) {
+	repo, _, err := client.Repositories.Get(context.TODO(), owner, repoName)
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
+}
+
 // SubmitPR submits the PR
 func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: r.Token})
-	tc := oauth2.NewClient(context.TODO(), ts)
-	client := github.NewClient(tc)
+	repo, err := r.getRepo(r.Client, r.UpstreamKrewIndexRepoOwner, r.UpstreamKrewIndexRepoName)
+	if err != nil {
+		return "", err
+	}
 
 	prr := &github.NewPullRequest{
 		Title: r.getTitle(request),
 		Head:  r.getHead(request),
-		Base:  github.String("master"),
+		Base:  github.String(*repo.DefaultBranch),
 		Body:  r.getPRBody(request),
 	}
 
 	logrus.Infof("creating pr with title %q, \nhead %q, \nbase %q, \nbody %q",
 		github.Stringify(r.getTitle(request)),
 		github.Stringify(r.getHead(request)),
-		"master",
+		github.Stringify(*repo.DefaultBranch),
 		github.Stringify(r.getPRBody(request)),
 	)
 
-	pr, _, err := client.PullRequests.Create(
+	pr, _, err := r.Client.PullRequests.Create(
 		context.TODO(),
 		r.UpstreamKrewIndexRepoOwner,
-		r.UpstreamKrewIndexRepo,
+		r.UpstreamKrewIndexRepoName,
 		prr,
 	)
 	if err != nil {

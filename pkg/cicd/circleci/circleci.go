@@ -81,3 +81,23 @@ func (p *Provider) GetTemplateFile() string {
 
 	return filepath.Join(p.GetWorkDirectory(), ".krew.yaml")
 }
+
+// GetKrewIndexRepoName gets upstream_krew_index_repo_name
+func (p *Provider) GetKrewIndexRepoName() string {
+	nameInput := getInputForAction("UPSTREAM_KREW_INDEX_REPO_NAME")
+	if nameInput != "" {
+		return nameInput
+	}
+
+	return os.Getenv("UPSTREAM_KREW_INDEX_REPO_NAME")
+}
+
+// GetKrewIndexRepoName gets upstream_krew_index_repo_owner
+func (p *Provider) GetKrewIndexRepoOwner() string {
+	ownerInput := getInputForAction("UPSTREAM_KREW_INDEX_REPO_OWNER")
+	if ownerInput != "" {
+		return ownerInput
+	}
+
+	return os.Getenv("UPSTREAM_KREW_INDEX_REPO_OWNER")
+}

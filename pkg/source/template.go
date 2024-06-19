@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//InvalidPluginSpecError is invalid plugin spec error
+// InvalidPluginSpecError is invalid plugin spec error
 type InvalidPluginSpecError struct {
 	Spec string
 	err  string
@@ -33,7 +33,7 @@ func indent(spaces int, v string) string {
 	return strings.TrimSpace(pad + strings.Replace(v, "\n", "\n"+pad, -1))
 }
 
-//ProcessTemplate process the .krew.yaml template for the release request
+// ProcessTemplate process the .krew.yaml template for the release request
 func ProcessTemplate(templateFile string, values interface{}) (string, []byte, error) {
 	spec, err := RenderTemplate(templateFile, values)
 	if err != nil {
@@ -51,7 +51,7 @@ func ProcessTemplate(templateFile string, values interface{}) (string, []byte, e
 	return pluginName, spec, nil
 }
 
-//RenderTemplate process the .krew.yaml template for the release request
+// RenderTemplate process the .krew.yaml template for the release request
 func RenderTemplate(templateFile string, values interface{}) ([]byte, error) {
 	logrus.Debugf("started processing of template %s", templateFile)
 	name := path.Base(templateFile)
