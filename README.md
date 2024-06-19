@@ -70,10 +70,12 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 
 # Inputs for the action
 
-| Key                | Default Value          | Description                                                                          |
-| ------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
-| workdir            | `env.GITHUB_WORKSPACE` | Overrides the GitHub workspace directory path                                        |
-| krew_template_file | `.krew.yaml`           | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
+| Key                            | Default Value          | Description                                                                          |
+| ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
+| workdir                        | `env.GITHUB_WORKSPACE` | Overrides the GitHub workspace directory path                                        |
+| krew_template_file             | `.krew.yaml`           | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
+| upstream_krew_index_repo_owner | `kubernetes-sigs`      | Overrides the GitHub owner of the Krew index, defaults to kubernetes-sigs            |
+| upstream_krew_index_repo_name  | `krew-index`           | Overrides the GitHub repository of the Krew index, defaults to krew-index            |
 
 # Limitations of krew-release-bot
 
