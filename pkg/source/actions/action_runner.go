@@ -10,26 +10,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/v50/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
+	"github.com/rajatjindal/krew-release-bot/pkg/source/validator"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
-func getHTTPClient() *http.Client {
-	if os.Getenv("GITHUB_TOKEN") != "" {
-		logrus.Info("GITHUB_TOKEN env variable found, using authenticated requests.")
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
-		return oauth2.NewClient(context.TODO(), ts)
-	}
-
-	return nil
-}
-
 // RunAction runs the github action
-func RunAction() error {
-	client := github.NewClient(getHTTPClient())
+func RunAction(ctx context.Context) error {
 	provider := cicd.GetProvider()
 
 	if provider == nil {
@@ -51,20 +39,20 @@ func RunAction() error {
 		return err
 	}
 
-	releaseInfo, err := getReleaseForTag(client, owner, repo, tag)
-	if err != nil {
+	validator := validator.GetValidator()
+	if err := validator.Validate(ctx, owner, repo, tag); err != nil {
 		return err
 	}
 
-	if releaseInfo.GetPrerelease() {
-		return fmt.Errorf("release with tag %q is a pre-release. skipping", releaseInfo.GetTagName())
+	if validator == nil {
+		logrus.Fatal("failed to identify the validator")
 	}
 
 	templateFile := provider.GetTemplateFile()
 	logrus.Infof("using template file %q", templateFile)
 
 	releaseRequest := &source.ReleaseRequest{
-		TagName:            releaseInfo.GetTagName(),
+		TagName:            tag,
 		PluginOwner:        owner,
 		PluginRepo:         repo,
 		PluginReleaseActor: actor,
@@ -86,15 +74,6 @@ func RunAction() error {
 
 	logrus.Info(pr)
 	return nil
-}
-
-func getReleaseForTag(client *github.Client, owner, repo, tag string) (*github.RepositoryRelease, error) {
-	release, _, err := client.Repositories.GetReleaseByTag(context.TODO(), owner, repo, tag)
-	if err != nil {
-		return nil, err
-	}
-
-	return release, nil
 }
 
 func submitForPR(request *source.ReleaseRequest) (string, error) {
