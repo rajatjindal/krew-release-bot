@@ -10,10 +10,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
-	"github.com/rajatjindal/krew-release-bot/pkg/source"
-	"github.com/rajatjindal/krew-release-bot/pkg/source/validator"
 	"github.com/sirupsen/logrus"
+
+	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
+	"github.com/rajatjindal/krew-release-bot/pkg/release"
+	"github.com/rajatjindal/krew-release-bot/pkg/source"
 )
 
 // RunAction runs the github action
@@ -39,13 +40,13 @@ func RunAction(ctx context.Context) error {
 		return err
 	}
 
-	validator := validator.GetValidator()
-	if err := validator.Validate(ctx, owner, repo, tag); err != nil {
+	releaseValidator, err := release.GetValidator()
+	if err != nil {
 		return err
 	}
 
-	if validator == nil {
-		logrus.Fatal("failed to identify the validator")
+	if err := releaseValidator.Validate(ctx, owner, repo, tag); err != nil {
+		return err
 	}
 
 	templateFile := provider.GetTemplateFile()

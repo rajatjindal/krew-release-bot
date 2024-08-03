@@ -21,6 +21,10 @@ type Provider interface {
 // GetProvider returns the CI/CD provider
 // e.g. github-actions, travis-ci, circle-ci or gitlab-ci
 func GetProvider() Provider {
+	if os.Getenv("GITLAB_CI") == "true" {
+		return &gitlabci.Provider{}
+	}
+
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return &github.Actions{}
 	}
@@ -31,10 +35,6 @@ func GetProvider() Provider {
 
 	if os.Getenv("TRAVIS") == "true" {
 		return &travisci.Provider{}
-	}
-
-	if os.Getenv("GITLAB_CI") == "true" {
-		return &gitlabci.Provider{}
 	}
 
 	return nil
