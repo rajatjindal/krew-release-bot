@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -131,7 +132,7 @@ func TestRunAction(t *testing.T) {
 				tc.setup()
 			}
 
-			err := RunAction()
+			err := RunAction(context.Background())
 			assertError(t, tc.expectedError, err)
 			logrus.Error(gock.GetUnmatchedRequests())
 

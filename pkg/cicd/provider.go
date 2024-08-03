@@ -5,10 +5,11 @@ import (
 
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/circleci"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/github"
+	"github.com/rajatjindal/krew-release-bot/pkg/cicd/gitlabci"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/travisci"
 )
 
-//Provider defines CI/CD provider interface
+// Provider defines CI/CD provider interface
 type Provider interface {
 	GetTag() (string, error)
 	GetActor() (string, error)
@@ -18,8 +19,12 @@ type Provider interface {
 }
 
 // GetProvider returns the CI/CD provider
-// e.g. github-actions or circle-ci
+// e.g. github-actions, travis-ci, circle-ci or gitlab-ci
 func GetProvider() Provider {
+	if os.Getenv("GITLAB_CI") == "true" {
+		return &gitlabci.Provider{}
+	}
+
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return &github.Actions{}
 	}
