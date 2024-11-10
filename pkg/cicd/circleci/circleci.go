@@ -7,11 +7,16 @@ import (
 	"strings"
 )
 
-//Provider implements provider interface
+// Provider implements provider interface
 type Provider struct{}
 
-//GetTag returns tag
+// GetTag returns tag
 func (p *Provider) GetTag() (string, error) {
+	tagInput := getInputForAction("tag")
+	if tagInput != "" {
+		return tagInput, nil
+	}
+
 	ref := os.Getenv("CIRCLE_TAG")
 	if ref == "" {
 		return "", fmt.Errorf("CIRCLE_TAG env variable not found")
@@ -20,7 +25,7 @@ func (p *Provider) GetTag() (string, error) {
 	return ref, nil
 }
 
-//GetOwnerAndRepo gets the owner and repo from the env
+// GetOwnerAndRepo gets the owner and repo from the env
 func (p *Provider) GetOwnerAndRepo() (string, string, error) {
 	owner := os.Getenv("CIRCLE_PROJECT_USERNAME")
 	if owner == "" {
@@ -35,7 +40,7 @@ func (p *Provider) GetOwnerAndRepo() (string, string, error) {
 	return owner, repo, nil
 }
 
-//GetActor gets the owner and repo from the env
+// GetActor gets the owner and repo from the env
 func (p *Provider) GetActor() (string, error) {
 	actor := os.Getenv("CIRCLE_USERNAME")
 	if actor == "" {
@@ -45,12 +50,12 @@ func (p *Provider) GetActor() (string, error) {
 	return actor, nil
 }
 
-//getInputForAction gets input to action
+// getInputForAction gets input to action
 func getInputForAction(key string) string {
 	return os.Getenv(fmt.Sprintf("INPUT_%s", strings.ToUpper(key)))
 }
 
-//GetWorkDirectory gets workdir
+// GetWorkDirectory gets workdir
 func (p *Provider) GetWorkDirectory() string {
 	workdirInput := getInputForAction("workdir")
 	if workdirInput != "" {
@@ -67,7 +72,7 @@ func (p *Provider) GetWorkDirectory() string {
 	return dir
 }
 
-//GetTemplateFile returns the template file
+// GetTemplateFile returns the template file
 func (p *Provider) GetTemplateFile() string {
 	templateFile := getInputForAction("krew_template_file")
 	if templateFile != "" {

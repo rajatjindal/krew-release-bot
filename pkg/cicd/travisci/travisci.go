@@ -7,11 +7,16 @@ import (
 	"strings"
 )
 
-//Provider implements provider interface
+// Provider implements provider interface
 type Provider struct{}
 
-//GetTag returns tag
+// GetTag returns tag
 func (p *Provider) GetTag() (string, error) {
+	tagInput := getInputForAction("tag")
+	if tagInput != "" {
+		return tagInput, nil
+	}
+
 	ref := os.Getenv("TRAVIS_TAG")
 	if ref == "" {
 		return "", fmt.Errorf("TRAVIS_TAG env variable not found")
@@ -20,7 +25,7 @@ func (p *Provider) GetTag() (string, error) {
 	return ref, nil
 }
 
-//GetOwnerAndRepo gets the owner and repo from the env
+// GetOwnerAndRepo gets the owner and repo from the env
 func (p *Provider) GetOwnerAndRepo() (string, string, error) {
 	repoFromEnv := os.Getenv("TRAVIS_REPO_SLUG")
 	if repoFromEnv == "" {
@@ -35,7 +40,7 @@ func (p *Provider) GetOwnerAndRepo() (string, string, error) {
 	return s[0], s[1], nil
 }
 
-//GetActor gets the owner and repo from the env
+// GetActor gets the owner and repo from the env
 func (p *Provider) GetActor() (string, error) {
 	owner, _, err := p.GetOwnerAndRepo()
 	if err != nil {
@@ -49,12 +54,12 @@ func (p *Provider) GetActor() (string, error) {
 	return owner, nil
 }
 
-//getInputForAction gets input to action
+// getInputForAction gets input to action
 func getInputForAction(key string) string {
 	return os.Getenv(fmt.Sprintf("INPUT_%s", strings.ToUpper(key)))
 }
 
-//GetWorkDirectory gets workdir
+// GetWorkDirectory gets workdir
 func (p *Provider) GetWorkDirectory() string {
 	workdirInput := getInputForAction("workdir")
 	if workdirInput != "" {
@@ -64,7 +69,7 @@ func (p *Provider) GetWorkDirectory() string {
 	return os.Getenv("TRAVIS_BUILD_DIR")
 }
 
-//GetTemplateFile returns the template file
+// GetTemplateFile returns the template file
 func (p *Provider) GetTemplateFile() string {
 	templateFile := getInputForAction("krew_template_file")
 	if templateFile != "" {
