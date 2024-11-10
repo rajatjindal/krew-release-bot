@@ -1,10 +1,9 @@
 module github.com/rajatjindal/krew-release-bot
 
-go 1.20
+go 1.23
 
 require (
 	github.com/aws/aws-lambda-go v1.39.1
-	github.com/google/go-github/v50 v50.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
@@ -17,10 +16,10 @@ require (
 	sigs.k8s.io/krew v0.3.3
 )
 
+require github.com/google/go-github/v66 v66.0.0
+
 require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
-	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
