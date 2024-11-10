@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestGetOwnerAndRepo(t *testing.T) {
@@ -111,11 +112,100 @@ func TestGetTag(t *testing.T) {
 			expectedTag: "v5.0.0",
 		},
 		{
+			name: "env GITHUB_REF is setup as expected",
+			setup: func() {
+				os.Setenv("GITHUB_REF", "refs/heads/main")
+				os.Setenv("GITHUB_REPOSITORY", "rajatjindal/kubectl-whoami")
+				os.Setenv("GITHUB_SHA", "5de971cf57f0aecdc08018e712ca0845f2dac714")
+
+				gock.New("https://api.github.com").
+					Get("/repos/rajatjindal/kubectl-whoami/releases").
+					Reply(200).
+					BodyString(`[
+  {
+    "url": "https://api.github.com/repos/rajatjindal/kubectl-whoami/releases/1",
+    "html_url": "https://github.com/rajatjindal/kubectl-whoami/releases/v1.0.0",
+    "assets_url": "https://api.github.com/repos/rajatjindal/kubectl-whoami/releases/1/assets",
+    "upload_url": "https://uploads.github.com/repos/rajatjindal/kubectl-whoami/releases/1/assets{?name,label}",
+    "tarball_url": "https://api.github.com/repos/rajatjindal/kubectl-whoami/tarball/v1.0.0",
+    "zipball_url": "https://api.github.com/repos/rajatjindal/kubectl-whoami/zipball/v1.0.0",
+    "id": 1,
+    "node_id": "MDc6UmVsZWFzZTE=",
+    "tag_name": "v1.0.0",
+    "target_commitish": "5de971cf57f0aecdc08018e712ca0845f2dac714",
+    "name": "v1.0.0",
+    "body": "Description of the release",
+    "draft": false,
+    "prerelease": false,
+    "created_at": "2013-02-27T19:35:32Z",
+    "published_at": "2013-02-27T19:35:32Z",
+    "author": {
+      "login": "rajatjindal",
+      "id": 1,
+      "node_id": "MDQ6VXNlcjE=",
+      "avatar_url": "https://github.com/images/error/rajatjindal_happy.gif",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/rajatjindal",
+      "html_url": "https://github.com/rajatjindal",
+      "followers_url": "https://api.github.com/users/rajatjindal/followers",
+      "following_url": "https://api.github.com/users/rajatjindal/following{/other_user}",
+      "gists_url": "https://api.github.com/users/rajatjindal/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/rajatjindal/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/rajatjindal/subscriptions",
+      "organizations_url": "https://api.github.com/users/rajatjindal/orgs",
+      "repos_url": "https://api.github.com/users/rajatjindal/repos",
+      "events_url": "https://api.github.com/users/rajatjindal/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/rajatjindal/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "assets": [
+      {
+        "url": "https://api.github.com/repos/rajatjindal/kubectl-whoami/releases/assets/1",
+        "browser_download_url": "https://github.com/rajatjindal/kubectl-whoami/releases/download/v1.0.0/example.zip",
+        "id": 1,
+        "node_id": "MDEyOlJlbGVhc2VBc3NldDE=",
+        "name": "example.zip",
+        "label": "short description",
+        "state": "uploaded",
+        "content_type": "application/zip",
+        "size": 1024,
+        "download_count": 42,
+        "created_at": "2013-02-27T19:35:32Z",
+        "updated_at": "2013-02-27T19:35:32Z",
+        "uploader": {
+          "login": "rajatjindal",
+          "id": 1,
+          "node_id": "MDQ6VXNlcjE=",
+          "avatar_url": "https://github.com/images/error/rajatjindal_happy.gif",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/rajatjindal",
+          "html_url": "https://github.com/rajatjindal",
+          "followers_url": "https://api.github.com/users/rajatjindal/followers",
+          "following_url": "https://api.github.com/users/rajatjindal/following{/other_user}",
+          "gists_url": "https://api.github.com/users/rajatjindal/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/rajatjindal/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/rajatjindal/subscriptions",
+          "organizations_url": "https://api.github.com/users/rajatjindal/orgs",
+          "repos_url": "https://api.github.com/users/rajatjindal/repos",
+          "events_url": "https://api.github.com/users/rajatjindal/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/rajatjindal/received_events",
+          "type": "User",
+          "site_admin": false
+        }
+      }
+    ]
+  }
+]`)
+			},
+			expectedTag: "v1.0.0",
+		},
+		{
 			name: "GITHUB_REF is in incorrect format",
 			setup: func() {
 				os.Setenv("GITHUB_REF", "tags/v5.0.0")
 			},
-			expectedError: `GITHUB_REF expected to be of format refs/tags/<tag> but found "tags/v5.0.0"`,
+			expectedError: `failed to find the tag for the release`,
 		},
 		{
 			name:          "GITHUB_REF is not found in env",
@@ -150,11 +240,4 @@ func assertError(t *testing.T, expectedError string, err error) {
 			assert.Equal(t, expectedError, err.Error())
 		}
 	}
-}
-
-func setupEnvironment() {
-	os.Setenv("GITHUB_REPOSITORY", "foo-bar/my-awesome-plugin")
-	os.Setenv("GITHUB_ACTOR", "karthik-aryan")
-	os.Setenv("GITHUB_REF", "refs/tags/v0.0.2")
-	os.Setenv("GITHUB_WORKSPACE", "./data/")
 }

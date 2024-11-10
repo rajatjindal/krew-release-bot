@@ -11,7 +11,7 @@ import (
 	"github.com/rajatjindal/krew-release-bot/pkg/source/actions"
 )
 
-//Releaser is what opens PR
+// Releaser is what opens PR
 type Releaser struct {
 	Token                         string
 	TokenEmail                    string
@@ -29,12 +29,12 @@ func getCloneURL(owner, repo string) string {
 	return fmt.Sprintf("https://github.com/%s/%s.git", owner, repo)
 }
 
-//TODO: get email, userhandle, name from token
-func getUserDetails(token string) (string, string, string) {
+// TODO: get email, userhandle, name from token
+func getUserDetails(_ string) (string, string, string) {
 	return "krew-release-bot", "Krew Release Bot", "krewpluginreleasebot@gmail.com"
 }
 
-//New returns new releaser object
+// New returns new releaser object
 func New(ghToken string) *Releaser {
 	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(ghToken)
 
@@ -52,7 +52,7 @@ func New(ghToken string) *Releaser {
 	}
 }
 
-//HandleActionLambdaWebhook handles requests from github actions
+// HandleActionLambdaWebhook handles requests from github actions
 func (releaser *Releaser) HandleActionLambdaWebhook(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	hook, err := actions.NewGithubActions()
 	if err != nil {
@@ -84,7 +84,7 @@ func (releaser *Releaser) HandleActionLambdaWebhook(ctx context.Context, request
 	}, nil
 }
 
-//HandleActionWebhook handles requests from github actions
+// HandleActionWebhook handles requests from github actions
 func (releaser *Releaser) HandleActionWebhook(w http.ResponseWriter, r *http.Request) {
 	hook, err := actions.NewGithubActions()
 	if err != nil {
@@ -105,5 +105,5 @@ func (releaser *Releaser) HandleActionWebhook(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("PR %q submitted successfully", pr)))
+	_, _ = w.Write([]byte(fmt.Sprintf("PR %q submitted successfully", pr)))
 }

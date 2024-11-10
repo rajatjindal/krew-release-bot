@@ -6,7 +6,6 @@ package source
 
 import (
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"time"
@@ -40,13 +39,13 @@ func getWithRetry(uri string) (*http.Response, error) {
 	return resp, err
 }
 
-func checkRetry(resp *http.Response, err error) bool {
+func checkRetry(resp *http.Response, _ error) bool {
 	return resp.StatusCode == http.StatusNotFound
 }
 
 func drainBody(b io.ReadCloser) {
 	defer b.Close()
-	io.Copy(ioutil.Discard, io.LimitReader(b, int64(4096)))
+	_, _ = io.Copy(io.Discard, io.LimitReader(b, int64(4096)))
 }
 
 func backoff(min, max time.Duration, attemptNum int) time.Duration {
