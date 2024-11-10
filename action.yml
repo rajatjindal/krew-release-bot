@@ -5,8 +5,6 @@ runs:
   using: "docker"
   image: "docker://ghcr.io/rajatjindal/krew-release-bot:v0.0.46"
 inputs:
-  tag:
-    description: "if provided use this tag, defaults to the tag parsed from env.GITHUB_REF"
   workdir:
     description: "Working directory, defaults to env.GITHUB_WORKSPACE"
   krew_template_file:

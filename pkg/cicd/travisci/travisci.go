@@ -12,11 +12,6 @@ type Provider struct{}
 
 // GetTag returns tag
 func (p *Provider) GetTag() (string, error) {
-	tagInput := getInputForAction("tag")
-	if tagInput != "" {
-		return tagInput, nil
-	}
-
 	ref := os.Getenv("TRAVIS_TAG")
 	if ref == "" {
 		return "", fmt.Errorf("TRAVIS_TAG env variable not found")
