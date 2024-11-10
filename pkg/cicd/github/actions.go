@@ -16,14 +16,14 @@ import (
 // Actions implements provider interface
 type Actions struct{}
 
-func getHTTPClient() *http.Client {
-	if os.Getenv("GITHUB_TOKEN") != "" {
-		logrus.Info("GITHUB_TOKEN env variable found, using authenticated requests.")
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
-		return oauth2.NewClient(context.TODO(), ts)
+func (p *Actions) IsPreRelease(owner, repo, tag string) (bool, error) {
+	client := github.NewClient(getHTTPClient())
+	releaseInfo, err := getReleaseForTag(client, owner, repo, tag)
+	if err != nil {
+		return false, err
 	}
 
-	return nil
+	return releaseInfo.GetPrerelease(), nil
 }
 
 func (p *Actions) getTagForCommitSha(commit string) (string, error) {
@@ -113,4 +113,23 @@ func (p *Actions) GetTemplateFile() string {
 	}
 
 	return filepath.Join(p.GetWorkDirectory(), ".krew.yaml")
+}
+
+func getHTTPClient() *http.Client {
+	if os.Getenv("GITHUB_TOKEN") != "" {
+		logrus.Info("GITHUB_TOKEN env variable found, using authenticated requests.")
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
+		return oauth2.NewClient(context.TODO(), ts)
+	}
+
+	return nil
+}
+
+func getReleaseForTag(client *github.Client, owner, repo, tag string) (*github.RepositoryRelease, error) {
+	release, _, err := client.Repositories.GetReleaseByTag(context.TODO(), owner, repo, tag)
+	if err != nil {
+		return nil, err
+	}
+
+	return release, nil
 }

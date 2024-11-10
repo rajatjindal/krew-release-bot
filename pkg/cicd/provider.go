@@ -15,6 +15,7 @@ type Provider interface {
 	GetOwnerAndRepo() (string, string, error)
 	GetWorkDirectory() string
 	GetTemplateFile() string
+	IsPreRelease(owner, repo, tag string) (bool, error)
 }
 
 // GetProvider returns the CI/CD provider

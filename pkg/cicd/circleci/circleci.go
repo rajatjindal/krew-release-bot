@@ -10,6 +10,11 @@ import (
 // Provider implements provider interface
 type Provider struct{}
 
+// TODO(rajatjindal): implement for circleci
+func (p *Provider) IsPreRelease(owner, repo, tag string) (bool, error) {
+	return false, nil
+}
+
 // GetTag returns tag
 func (p *Provider) GetTag() (string, error) {
 	ref := os.Getenv("CIRCLE_TAG")
