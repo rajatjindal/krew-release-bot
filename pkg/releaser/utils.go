@@ -3,7 +3,6 @@ package releaser
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -12,9 +11,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//Release releases
+// Release releases
 func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error) {
-	tempdir, err := ioutil.TempDir("", "krew-index-")
+	tempdir, err := os.MkdirTemp("", "krew-index-")
 	if err != nil {
 		return "", err
 	}
@@ -26,13 +25,13 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 		return "", err
 	}
 
-	newIndexFile, err := ioutil.TempFile("", "krew-")
+	newIndexFile, err := os.CreateTemp("", "krew-")
 	if err != nil {
 		return "", err
 	}
 	defer os.Remove(newIndexFile.Name())
 
-	err = ioutil.WriteFile(newIndexFile.Name(), request.ProcessedTemplate, 0644)
+	err = os.WriteFile(newIndexFile.Name(), request.ProcessedTemplate, 0644)
 	if err != nil {
 		return "", err
 	}

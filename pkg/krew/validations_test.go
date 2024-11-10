@@ -1,7 +1,7 @@
 package krew
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ func TestGetPluginName(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			spec, _ := ioutil.ReadFile(tc.file)
+			spec, _ := os.ReadFile(tc.file)
 			pluginName, err := GetPluginName(spec)
 			assert.Equal(t, tc.expectedName, pluginName)
 

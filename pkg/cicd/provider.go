@@ -8,13 +8,14 @@ import (
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/travisci"
 )
 
-//Provider defines CI/CD provider interface
+// Provider defines CI/CD provider interface
 type Provider interface {
 	GetTag() (string, error)
 	GetActor() (string, error)
 	GetOwnerAndRepo() (string, string, error)
 	GetWorkDirectory() string
 	GetTemplateFile() string
+	IsPreRelease(owner, repo, tag string) (bool, error)
 }
 
 // GetProvider returns the CI/CD provider

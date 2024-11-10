@@ -3,9 +3,8 @@ package source
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
-
-	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -88,7 +87,7 @@ func TestRenderTemplate(t *testing.T) {
 				panic(err)
 			}
 
-			expectedOut, err := ioutil.ReadFile(tc.expected)
+			expectedOut, err := os.ReadFile(tc.expected)
 			if err != nil {
 				panic(err)
 			}

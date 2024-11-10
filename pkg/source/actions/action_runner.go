@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/v50/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
@@ -29,7 +28,6 @@ func getHTTPClient() *http.Client {
 
 // RunAction runs the github action
 func RunAction() error {
-	client := github.NewClient(getHTTPClient())
 	provider := cicd.GetProvider()
 
 	if provider == nil {
@@ -51,20 +49,22 @@ func RunAction() error {
 		return err
 	}
 
-	releaseInfo, err := getReleaseForTag(client, owner, repo, tag)
+	// this currently works only for GitHub.
+	// for travisci and circleci it always return false, nil
+	prerelease, err := provider.IsPreRelease(owner, repo, tag)
 	if err != nil {
 		return err
 	}
 
-	if releaseInfo.GetPrerelease() {
-		return fmt.Errorf("release with tag %q is a pre-release. skipping", releaseInfo.GetTagName())
+	if prerelease {
+		return fmt.Errorf("release with tag %q is a pre-release. skipping", tag)
 	}
 
 	templateFile := provider.GetTemplateFile()
 	logrus.Infof("using template file %q", templateFile)
 
 	releaseRequest := &source.ReleaseRequest{
-		TagName:            releaseInfo.GetTagName(),
+		TagName:            tag,
 		PluginOwner:        owner,
 		PluginRepo:         repo,
 		PluginReleaseActor: actor,
@@ -86,15 +86,6 @@ func RunAction() error {
 
 	logrus.Info(pr)
 	return nil
-}
-
-func getReleaseForTag(client *github.Client, owner, repo, tag string) (*github.RepositoryRelease, error) {
-	release, _, err := client.Repositories.GetReleaseByTag(context.TODO(), owner, repo, tag)
-	if err != nil {
-		return nil, err
-	}
-
-	return release, nil
 }
 
 func submitForPR(request *source.ReleaseRequest) (string, error) {

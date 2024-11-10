@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v66/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -100,7 +100,11 @@ func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, 
 		return err
 	}
 
-	w.Add(".")
+	_, err = w.Add(".")
+	if err != nil {
+		return err
+	}
+
 	_, err = w.Commit(commit.Msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  r.TokenUsername,
@@ -108,6 +112,9 @@ func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, 
 			When:  time.Now(),
 		},
 	})
+	if err != nil {
+		return err
+	}
 
 	branchName := r.getBranchName(request)
 	pushRef := getPushRefSpec(*branchName)

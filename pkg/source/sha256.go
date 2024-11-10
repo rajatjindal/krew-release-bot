@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,9 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const retries = 4
-
-//DownloadFileWithName downloads a file with name
+// DownloadFileWithName downloads a file with name
 func DownloadFileWithName(uri, name string) (string, error) {
 	resp, err := getWithRetry(uri)
 	if err != nil {
@@ -28,7 +25,7 @@ func DownloadFileWithName(uri, name string) (string, error) {
 		return "", fmt.Errorf("downloading file %s failed. status code: %d, expected: %d", uri, resp.StatusCode, http.StatusOK)
 	}
 
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", err
 	}

@@ -6,13 +6,13 @@ jobs:
     steps:
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.20'
+        go-version: '1.23'
 
     - name: Run unit tests
       run: |
-        pwd && ls -ltr && go version && go test -mod vendor ./... -cover
+        pwd && ls -ltr && go version && go test ./... -cover
