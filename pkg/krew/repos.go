@@ -9,7 +9,7 @@ const (
 
 //GetKrewIndexRepoName returns the krew-index repo name
 func GetKrewIndexRepoName() string {
-	override := os.Getenv("UPSTREAM_KREW_INDEX_REPO_NAME")
+	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_NAME")
 	if override != "" {
 		return override
 	}
@@ -19,7 +19,7 @@ func GetKrewIndexRepoName() string {
 
 //GetKrewIndexRepoOwner returns the krew-index repo owner
 func GetKrewIndexRepoOwner() string {
-	override := os.Getenv("UPSTREAM_KREW_INDEX_REPO_OWNER")
+	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_OWNER")
 	if override != "" {
 		return override
 	}
