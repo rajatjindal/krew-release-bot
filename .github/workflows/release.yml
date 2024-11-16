@@ -52,7 +52,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-        go test ./... -cover
+        make test
 
     - name: GoReleaser
       uses: goreleaser/goreleaser-action@v4.2.0
