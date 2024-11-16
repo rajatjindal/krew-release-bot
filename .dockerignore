@@ -2,6 +2,9 @@
 .git
 .github
 
+# editor and IDE paraphernalia
+.idea
+
 # misc
 *.md
 *.sh
