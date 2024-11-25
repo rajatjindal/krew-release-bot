@@ -9,3 +9,11 @@ inputs:
     description: "Working directory, defaults to env.GITHUB_WORKSPACE"
   krew_template_file:
     description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
+  upstream_krew_index_repo_owner:
+    description: 'The owner of the Krew index repository'
+    required: false
+    default: kubernetes-sigs
+  upstream_krew_index_repo_name:
+    description: 'The name of the Krew index repository'
+    required: false
+    default: krew-index

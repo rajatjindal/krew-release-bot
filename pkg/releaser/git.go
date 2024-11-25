@@ -30,10 +30,16 @@ const (
 // CloneRepos clones the repo
 func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
 	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
+	client := getGitHubClient(r.Token)
+	remoteRepo, err := r.getRepo(client, r.UpstreamKrewIndexRepoOwner, r.UpstreamKrewIndexRepo)
+	if err != nil {
+		return nil, err
+	}
+
 	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
 		URL:           r.UpstreamKrewIndexRepoCloneURL,
 		Progress:      os.Stdout,
-		ReferenceName: plumbing.Master,
+		ReferenceName: plumbing.ReferenceName(*remoteRepo.DefaultBranch),
 		SingleBranch:  true,
 		Auth:          r.getAuth(),
 		RemoteName:    OriginNameUpstream,
@@ -130,23 +136,39 @@ func getPushRefSpec(branchName string) string {
 	return fmt.Sprintf("refs/heads/%s:refs/heads/%s", branchName, branchName)
 }
 
+func getGitHubClient(token string) *github.Client {
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(context.TODO(), ts)
+	return github.NewClient(tc)
+}
+
+func (r *Releaser) getRepo(client *github.Client, owner string, repoName string) (*github.Repository, error) {
+	repo, _, err := client.Repositories.Get(context.TODO(), owner, repoName)
+    if err != nil {
+        return nil, err
+    }
+	return repo, nil
+}
+
 // SubmitPR submits the PR
 func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: r.Token})
-	tc := oauth2.NewClient(context.TODO(), ts)
-	client := github.NewClient(tc)
+	client := getGitHubClient(r.Token)
+	repo, err := r.getRepo(client, r.UpstreamKrewIndexRepoOwner, r.UpstreamKrewIndexRepo)
+	if err != nil {
+		return "", err
+	}
 
 	prr := &github.NewPullRequest{
 		Title: r.getTitle(request),
 		Head:  r.getHead(request),
-		Base:  github.String("master"),
+		Base:  github.String(*repo.DefaultBranch),
 		Body:  r.getPRBody(request),
 	}
 
 	logrus.Infof("creating pr with title %q, \nhead %q, \nbase %q, \nbody %q",
 		github.Stringify(r.getTitle(request)),
 		github.Stringify(r.getHead(request)),
-		"master",
+		github.Stringify(*repo.DefaultBranch),
 		github.Stringify(r.getPRBody(request)),
 	)
 
