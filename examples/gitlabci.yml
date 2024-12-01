@@ -1,0 +1,18 @@
+variables:
+  ## KREW_RELEASE_BOT_WEBHOOK_URL env helps you test your setup without actually publishing to kubernetes-sigs/krew-index
+  ## remove this env when you are ready for real release
+  KREW_RELEASE_BOT_WEBHOOK_URL: "https://krew-release-bot-dryrun.rajatjindal.com/github-action-webhook2"
+  KREW_RELEASE_BOT_VERSION: "v0.0.46"
+
+stages:
+  - release
+
+update-krew-index:
+  stage: release
+  script:
+    - echo "using krew-release-bot version ${KREW_RELEASE_BOT_VERSION}"
+    - curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/${KREW_RELEASE_BOT_VERSION}/krew-release-bot_${KREW_RELEASE_BOT_VERSION}_linux_amd64.tar.gz
+    - tar -xvf krew-release-bot_${KREW_RELEASE_BOT_VERSION}_linux_amd64.tar.gz
+    - ./krew-release-bot action
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9-\.]+)?$/'
