@@ -8,7 +8,7 @@ env:
 sudo: false
 
 script:
-  - curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/v0.0.48/krew-release-bot_v0.0.48_linux_amd64.tar.gz
-  - tar -xvf krew-release-bot_v0.0.48_linux_amd64.tar.gz
+  - curl -LO https://github.com/rajatjindal/krew-release-bot/releases/download/v0.0.49/krew-release-bot_v0.0.49_linux_amd64.tar.gz
+  - tar -xvf krew-release-bot_v0.0.49_linux_amd64.tar.gz
   - printenv && pwd && ls -ltr
   - ./krew-release-bot action
