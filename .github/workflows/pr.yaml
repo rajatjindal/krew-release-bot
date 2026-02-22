@@ -1,5 +1,10 @@
 name: Test Pull Request
 on: [pull_request]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   TestPR:
     runs-on: ubuntu-latest
@@ -16,3 +21,17 @@ jobs:
     - name: Run unit tests
       run: |
         pwd && ls -ltr && go version && make test
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}    

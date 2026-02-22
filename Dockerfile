@@ -3,8 +3,8 @@ FROM golang:1.26-alpine AS builder
 WORKDIR /go/src/github.com/rajatjindal/krew-release-bot
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go test -mod vendor ./... -cover
-RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor --ldflags "-s -w" -o krew-release-bot cmd/action/*
+RUN CGO_ENABLED=0 GOOS=linux go test  ./... -cover
+RUN CGO_ENABLED=0 GOOS=linux go build --ldflags "-s -w" -o krew-release-bot cmd/action/*
 
 FROM alpine:3.23
 
