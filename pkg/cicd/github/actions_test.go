@@ -96,6 +96,7 @@ func TestGetActor(t *testing.T) {
 		})
 	}
 }
+
 func TestGetTag(t *testing.T) {
 	testcases := []struct {
 		name          string
@@ -120,6 +121,13 @@ func TestGetTag(t *testing.T) {
 		{
 			name:          "GITHUB_REF is not found in env",
 			expectedError: `GITHUB_REF env variable not found`,
+		},
+		{
+			name: "krew_plugin_release_tag is provided",
+			setup: func() {
+				os.Setenv("INPUT_KREW_PLUGIN_RELEASE_TAG", "refs/tags/v5.0.0")
+			},
+			expectedTag: "v5.0.0",
 		},
 	}
 

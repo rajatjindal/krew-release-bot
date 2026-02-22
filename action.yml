@@ -9,3 +9,5 @@ inputs:
     description: "Working directory, defaults to env.GITHUB_WORKSPACE"
   krew_template_file:
     description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
+  krew_plugin_release_tag:
+    description: "The tag to use for releasing the krew plugin. Defaults to fetching info from GITHUB_REF"

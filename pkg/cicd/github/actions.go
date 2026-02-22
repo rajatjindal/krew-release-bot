@@ -48,9 +48,13 @@ func (p *Actions) getTagForCommitSha(commit string) (string, error) {
 
 // GetTag returns tag
 func (p *Actions) GetTag() (string, error) {
-	ref := os.Getenv("GITHUB_REF")
+	// check if user provided the tag, if not fallback to finding it from GITHUB_REF
+	ref := getInputForAction("krew_plugin_release_tag")
 	if ref == "" {
-		return "", fmt.Errorf("GITHUB_REF env variable not found")
+		ref = os.Getenv("GITHUB_REF")
+		if ref == "" {
+			return "", fmt.Errorf("GITHUB_REF env variable not found")
+		}
 	}
 
 	//GITHUB_REF=refs/tags/v0.0.6
