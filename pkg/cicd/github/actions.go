@@ -133,3 +133,23 @@ func getReleaseForTag(client *github.Client, owner, repo, tag string) (*github.R
 
 	return release, nil
 }
+
+// GetKrewIndexRepoName gets upstream_krew_index_repo_name
+func (p *Actions) GetKrewIndexRepoName() string {
+	nameInput := getInputForAction("UPSTREAM_KREW_INDEX_REPO_NAME")
+	if nameInput != "" {
+		return nameInput
+	}
+
+	return os.Getenv("UPSTREAM_KREW_INDEX_REPO_NAME")
+}
+
+// GetKrewIndexRepoName gets upstream_krew_index_repo_owner
+func (p *Actions) GetKrewIndexRepoOwner() string {
+	ownerInput := getInputForAction("UPSTREAM_KREW_INDEX_REPO_OWNER")
+	if ownerInput != "" {
+		return ownerInput
+	}
+
+	return os.Getenv("UPSTREAM_KREW_INDEX_REPO_OWNER")
+}

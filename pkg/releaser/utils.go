@@ -18,6 +18,10 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 		return "", err
 	}
 	defer os.RemoveAll(tempdir)
+	// Check krew-index inputs
+	releaser.UpstreamKrewIndexRepoName = krew.SetKrewIndexRepoName(request.KrewIndexName)
+	releaser.UpstreamKrewIndexRepoOwner = krew.SetKrewIndexRepoOwner(request.KrewIndexOwner)
+	releaser.UpstreamKrewIndexRepoCloneURL = getCloneURL(releaser.UpstreamKrewIndexRepoOwner, releaser.UpstreamKrewIndexRepoName)
 
 	logrus.Infof("will operate in tempdir %s", tempdir)
 	repo, err := releaser.cloneRepos(tempdir, request)
