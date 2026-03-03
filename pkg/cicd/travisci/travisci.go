@@ -17,7 +17,12 @@ func (p *Provider) IsPreRelease(owner, repo, tag string) (bool, error) {
 
 // GetTag returns tag
 func (p *Provider) GetTag() (string, error) {
-	ref := os.Getenv("TRAVIS_TAG")
+	ref := getInputForAction("krew_plugin_release_tag")
+	if ref != "" {
+		return ref, nil
+	}
+
+	ref = os.Getenv("TRAVIS_TAG")
 	if ref == "" {
 		return "", fmt.Errorf("TRAVIS_TAG env variable not found")
 	}

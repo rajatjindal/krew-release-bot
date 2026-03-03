@@ -116,6 +116,14 @@ func TestGetTag(t *testing.T) {
 			},
 			expectedError: `CIRCLE_TAG env variable not found`,
 		},
+		{
+			name: "krew_plugin_release_tag is provided",
+			setup: func() {
+				os.Setenv("INPUT_KREW_PLUGIN_RELEASE_TAG", "v5.0.0")
+				os.Setenv("TRAVIS_TAG", "v1.0.0")
+			},
+			expectedTag: "v5.0.0",
+		},
 	}
 
 	p := &Provider{}

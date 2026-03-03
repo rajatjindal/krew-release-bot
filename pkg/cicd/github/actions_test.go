@@ -208,6 +208,14 @@ func TestGetTag(t *testing.T) {
 			expectedError: `failed to find the tag for the release`,
 		},
 		{
+			name: "input krew_plugin_release_tag is provided",
+			setup: func() {
+				os.Setenv("INPUT_KREW_PLUGIN_RELEASE_TAG", "v5.0.0")
+				os.Setenv("GITHUB_REF", "refs/tags/v1.0.0")
+			},
+			expectedTag: "v5.0.0",
+		},
+		{
 			name:          "GITHUB_REF is not found in env",
 			expectedError: `GITHUB_REF env variable not found`,
 		},
