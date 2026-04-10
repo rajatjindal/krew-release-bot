@@ -6,18 +6,21 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/google/go-github/v66/github"
 	"github.com/pkg/errors"
 	"github.com/rajatjindal/krew-release-bot/pkg/krew"
 	"github.com/rajatjindal/krew-release-bot/pkg/source/actions"
+	"golang.org/x/oauth2"
 )
 
 // Releaser is what opens PR
 type Releaser struct {
+	Client                        *github.Client
 	Token                         string
 	TokenEmail                    string
 	TokenUserHandle               string
 	TokenUsername                 string
-	UpstreamKrewIndexRepo         string
+	UpstreamKrewIndexRepoName     string
 	UpstreamKrewIndexRepoOwner    string
 	UpstreamKrewIndexRepoCloneURL string
 	LocalKrewIndexRepo            string
@@ -27,6 +30,12 @@ type Releaser struct {
 
 func getCloneURL(owner, repo string) string {
 	return fmt.Sprintf("https://github.com/%s/%s.git", owner, repo)
+}
+
+func getGitHubClient(token string) *github.Client {
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(context.TODO(), ts)
+	return github.NewClient(tc)
 }
 
 // TODO: get email, userhandle, name from token
@@ -39,11 +48,12 @@ func New(ghToken string) *Releaser {
 	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(ghToken)
 
 	return &Releaser{
+		Client:                        getGitHubClient(ghToken),
 		Token:                         ghToken,
 		TokenEmail:                    tokenEmail,
 		TokenUserHandle:               tokenUserHandle,
 		TokenUsername:                 tokenUsername,
-		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
+		UpstreamKrewIndexRepoName:     krew.GetKrewIndexRepoName(),
 		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
 		UpstreamKrewIndexRepoCloneURL: getCloneURL(krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName()),
 		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),

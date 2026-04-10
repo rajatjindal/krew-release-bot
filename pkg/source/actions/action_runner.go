@@ -63,12 +63,20 @@ func RunAction() error {
 	templateFile := provider.GetTemplateFile()
 	logrus.Infof("using template file %q", templateFile)
 
+	krewIndexOwner := provider.GetKrewIndexRepoOwner()
+	logrus.Infof("using krew-index owner %q", krewIndexOwner)
+
+	krewIndexName := provider.GetKrewIndexRepoName()
+	logrus.Infof("using krew-index name %q", krewIndexName)
+
 	releaseRequest := &source.ReleaseRequest{
 		TagName:            tag,
 		PluginOwner:        owner,
 		PluginRepo:         repo,
 		PluginReleaseActor: actor,
 		TemplateFile:       templateFile,
+		KrewIndexName:      krewIndexName,
+		KrewIndexOwner:     krewIndexOwner,
 	}
 
 	pluginName, pluginManifest, err := source.ProcessTemplate(templateFile, releaseRequest)
