@@ -76,3 +76,25 @@ func TestOpenPullRequestRequiresBaseBranch(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
+	r := &Releaser{
+		UpstreamKrewIndexRepoOwner:  "acme",
+		UpstreamKrewIndexRepo:       "custom-index",
+		LocalKrewIndexRepoOwner:     "acme",
+		LocalKrewIndexRepo:          "custom-index",
+		UpstreamKrewIndexBaseBranch: "main",
+	}
+
+	pullRequest := r.buildPullRequest(&source.ReleaseRequest{
+		TagName:            "v1.2.3",
+		PluginName:         "my-plugin",
+		PluginRepo:         "my-plugin",
+		PluginOwner:        "acme",
+		PluginReleaseActor: "release-user",
+	})
+
+	if pullRequest.Head != "acme-my-plugin-my-plugin-v1.2.3" {
+		t.Fatalf("unexpected direct-mode head: %s", pullRequest.Head)
+	}
+}

@@ -43,7 +43,17 @@ func (r *Releaser) getBranchName(request *source.ReleaseRequest) string {
 }
 
 func (r *Releaser) getHead(request *source.ReleaseRequest) string {
-	return fmt.Sprintf("%s:%s", r.TokenUserHandle, r.getBranchName(request))
+	branchName := r.getBranchName(request)
+	if r.LocalKrewIndexRepoOwner == r.UpstreamKrewIndexRepoOwner && r.LocalKrewIndexRepo == r.UpstreamKrewIndexRepo {
+		return branchName
+	}
+
+	owner := r.LocalKrewIndexRepoOwner
+	if owner == "" {
+		owner = r.TokenUserHandle
+	}
+
+	return fmt.Sprintf("%s:%s", owner, branchName)
 }
 
 func (r *Releaser) getPRBody(request *source.ReleaseRequest) string {

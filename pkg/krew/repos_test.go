@@ -25,6 +25,13 @@ func TestGetKrewIndexRepoName(t *testing.T) {
 			expected: "krew-index",
 		},
 		{
+			name: "action input is set to value",
+			setup: func() {
+				os.Setenv("INPUT_KREW_INDEX_REPO_NAME", "custom-index")
+			},
+			expected: "custom-index",
+		},
+		{
 			name: "env variable is set to value",
 			setup: func() {
 				os.Setenv("UPSTREAM_KREW_INDEX_REPO_NAME", "foo-bar")
@@ -62,6 +69,13 @@ func TestGetKrewIndexRepoOwner(t *testing.T) {
 				os.Setenv("UPSTREAM_KREW_INDEX_REPO_OWNER", "")
 			},
 			expected: "kubernetes-sigs",
+		},
+		{
+			name: "action input is set to value",
+			setup: func() {
+				os.Setenv("INPUT_KREW_INDEX_REPO_OWNER", "custom-owner")
+			},
+			expected: "custom-owner",
 		},
 		{
 			name: "env variable is set to value",
