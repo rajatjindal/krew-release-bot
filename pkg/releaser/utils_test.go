@@ -23,10 +23,11 @@ func (f *fakePullRequestOpener) Open(owner, repo string, pullRequest PullRequest
 func TestOpenPullRequestUsesConfiguredOpener(t *testing.T) {
 	opener := &fakePullRequestOpener{response: "https://example.com/pr/1"}
 	r := &Releaser{
-		TokenUserHandle:            "bot-user",
-		PullRequestOpener:          opener,
-		UpstreamKrewIndexRepoOwner: "kubernetes-sigs",
-		UpstreamKrewIndexRepo:      "krew-index",
+		TokenUserHandle:             "bot-user",
+		PullRequestOpener:           opener,
+		UpstreamKrewIndexRepoOwner:  "kubernetes-sigs",
+		UpstreamKrewIndexRepo:       "krew-index",
+		UpstreamKrewIndexBaseBranch: "main",
 	}
 
 	request := &source.ReleaseRequest{
@@ -50,7 +51,7 @@ func TestOpenPullRequestUsesConfiguredOpener(t *testing.T) {
 		t.Fatalf("unexpected target repo: %s/%s", opener.owner, opener.repo)
 	}
 
-	if opener.pullRequest.Base != "master" {
+	if opener.pullRequest.Base != "main" {
 		t.Fatalf("unexpected base branch: %s", opener.pullRequest.Base)
 	}
 
@@ -60,5 +61,18 @@ func TestOpenPullRequestUsesConfiguredOpener(t *testing.T) {
 
 	if opener.pullRequest.Title != "release new version v1.2.3 of my-plugin" {
 		t.Fatalf("unexpected title: %s", opener.pullRequest.Title)
+	}
+}
+
+func TestOpenPullRequestRequiresBaseBranch(t *testing.T) {
+	r := &Releaser{
+		PullRequestOpener:          &fakePullRequestOpener{},
+		UpstreamKrewIndexRepoOwner: "kubernetes-sigs",
+		UpstreamKrewIndexRepo:      "krew-index",
+	}
+
+	_, err := r.openPullRequest(&source.ReleaseRequest{})
+	if err == nil || err.Error() != "no upstream base branch configured" {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

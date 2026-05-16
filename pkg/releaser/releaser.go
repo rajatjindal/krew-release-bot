@@ -20,6 +20,7 @@ type Releaser struct {
 	PullRequestOpener             PullRequestOpener
 	UpstreamKrewIndexRepo         string
 	UpstreamKrewIndexRepoOwner    string
+	UpstreamKrewIndexBaseBranch   string
 	UpstreamKrewIndexRepoCloneURL string
 	LocalKrewIndexRepo            string
 	LocalKrewIndexRepoOwner       string

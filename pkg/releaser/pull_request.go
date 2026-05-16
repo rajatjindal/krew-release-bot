@@ -23,7 +23,7 @@ func (r *Releaser) buildPullRequest(request *source.ReleaseRequest) PullRequest 
 	return PullRequest{
 		Title: r.getTitle(request),
 		Head:  r.getHead(request),
-		Base:  "master",
+		Base:  r.UpstreamKrewIndexBaseBranch,
 		Body:  r.getPRBody(request),
 	}
 }
