@@ -25,6 +25,13 @@ func TestGetKrewIndexRepoName(t *testing.T) {
 			expected: "krew-index",
 		},
 		{
+			name: "new action input is set to value",
+			setup: func() {
+				os.Setenv("INPUT_INDEX_REPO_NAME", "new-custom-index")
+			},
+			expected: "new-custom-index",
+		},
+		{
 			name: "action input is set to value",
 			setup: func() {
 				os.Setenv("INPUT_KREW_INDEX_REPO_NAME", "custom-index")
@@ -71,6 +78,13 @@ func TestGetKrewIndexRepoOwner(t *testing.T) {
 			expected: "kubernetes-sigs",
 		},
 		{
+			name: "new action input is set to value",
+			setup: func() {
+				os.Setenv("INPUT_INDEX_REPO_OWNER", "new-custom-owner")
+			},
+			expected: "new-custom-owner",
+		},
+		{
 			name: "action input is set to value",
 			setup: func() {
 				os.Setenv("INPUT_KREW_INDEX_REPO_OWNER", "custom-owner")
@@ -94,6 +108,49 @@ func TestGetKrewIndexRepoOwner(t *testing.T) {
 			}
 
 			actual := GetKrewIndexRepoOwner()
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func TestGetKrewIndexRepoCloneURL(t *testing.T) {
+	testcases := []struct {
+		name     string
+		setup    func()
+		expected string
+	}{
+		{
+			name:     "defaults to provider clone url",
+			expected: "test://kubernetes-sigs/krew-index",
+		},
+		{
+			name: "new input override is set",
+			setup: func() {
+				os.Setenv("INPUT_INDEX_REPO_CLONE_URL", "ssh://example/custom-index.git")
+			},
+			expected: "ssh://example/custom-index.git",
+		},
+		{
+			name: "deprecated input override is set",
+			setup: func() {
+				os.Setenv("INPUT_KREW_INDEX_REPO_CLONE_URL", "https://example/legacy.git")
+			},
+			expected: "https://example/legacy.git",
+		},
+	}
+
+	defaultCloneURL := func(owner, repo string) string {
+		return "test://" + owner + "/" + repo
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			os.Clearenv()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			actual := GetKrewIndexRepoCloneURL(defaultCloneURL)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
