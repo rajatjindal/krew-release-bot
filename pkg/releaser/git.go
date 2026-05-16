@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v66/github"
-	"github.com/rajatjindal/krew-release-bot/pkg/source"
+	"github.com/rajatjindal/krew-release-bot/pkg/types"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
@@ -28,7 +28,7 @@ const (
 )
 
 // CloneRepos clones the repo
-func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
+func (r *Releaser) cloneRepos(dir string, request *types.ReleaseRequest) (*ugit.Repository, error) {
 	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
 	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
 		URL:           r.UpstreamKrewIndexRepoCloneURL,
@@ -94,7 +94,7 @@ type commitConfig struct {
 }
 
 // AddCommitAndPush commits and push
-func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, request *source.ReleaseRequest) error {
+func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, request *types.ReleaseRequest) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func getPushRefSpec(branchName string) string {
 }
 
 // SubmitPR submits the PR
-func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
+func (r *Releaser) submitPR(request *types.ReleaseRequest) (string, error) {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: r.Token})
 	tc := oauth2.NewClient(context.TODO(), ts)
 	client := github.NewClient(tc)
@@ -164,7 +164,7 @@ func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
 	return pr.GetHTMLURL(), nil
 }
 
-func (r *Releaser) getTitle(request *source.ReleaseRequest) *string {
+func (r *Releaser) getTitle(request *types.ReleaseRequest) *string {
 	s := fmt.Sprintf(
 		"release new version %s of %s",
 		request.TagName,
@@ -174,19 +174,19 @@ func (r *Releaser) getTitle(request *source.ReleaseRequest) *string {
 	return github.String(s)
 }
 
-func (r *Releaser) getBranchName(request *source.ReleaseRequest) *string {
+func (r *Releaser) getBranchName(request *types.ReleaseRequest) *string {
 	s := fmt.Sprintf("%s-%s-%s-%s", request.PluginOwner, request.PluginName, request.PluginRepo, request.TagName)
 	fmt.Printf("creating branch %s", s)
 	return github.String(s)
 }
 
-func (r *Releaser) getHead(request *source.ReleaseRequest) *string {
+func (r *Releaser) getHead(request *types.ReleaseRequest) *string {
 	branchName := r.getBranchName(request)
 	s := fmt.Sprintf("%s:%s", r.TokenUserHandle, *branchName)
 	return github.String(s)
 }
 
-func (r *Releaser) getPRBody(request *source.ReleaseRequest) *string {
+func (r *Releaser) getPRBody(request *types.ReleaseRequest) *string {
 	prBody := `hey krew-index team,
 
 I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I would like to open this PR to publish version %s of %s on behalf of @%s.

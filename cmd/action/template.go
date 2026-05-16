@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
+	"github.com/rajatjindal/krew-release-bot/pkg/types"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -35,7 +36,7 @@ var templateCmd = &cobra.Command{
 			logrus.SetLevel(logrus.DebugLevel)
 		}
 
-		releaseRequest := source.ReleaseRequest{
+		releaseRequest := types.ReleaseRequest{
 			TagName: tagName,
 		}
 

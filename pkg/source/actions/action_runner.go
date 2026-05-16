@@ -2,7 +2,6 @@ package actions
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,21 +9,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
+	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
+	"github.com/rajatjindal/krew-release-bot/pkg/types"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
-
-func getHTTPClient() *http.Client {
-	if os.Getenv("GITHUB_TOKEN") != "" {
-		logrus.Info("GITHUB_TOKEN env variable found, using authenticated requests.")
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
-		return oauth2.NewClient(context.TODO(), ts)
-	}
-
-	return nil
-}
 
 // RunAction runs the github action
 func RunAction() error {
@@ -63,7 +54,7 @@ func RunAction() error {
 	templateFile := provider.GetTemplateFile()
 	logrus.Infof("using template file %q", templateFile)
 
-	releaseRequest := &source.ReleaseRequest{
+	releaseRequest := &types.ReleaseRequest{
 		TagName:            tag,
 		PluginOwner:        owner,
 		PluginRepo:         repo,
@@ -79,16 +70,24 @@ func RunAction() error {
 	releaseRequest.PluginName = pluginName
 	releaseRequest.ProcessedTemplate = pluginManifest
 
-	pr, err := submitForPR(releaseRequest)
-	if err != nil {
-		return err
+	if true {
+		pr, err := submitPRViaWebhook(releaseRequest)
+		if err != nil {
+			return err
+		}
+		logrus.Info(pr)
+	} else {
+		pr, err := submitPR(releaseRequest)
+		if err != nil {
+			return err
+		}
+		logrus.Info(pr)
 	}
 
-	logrus.Info(pr)
 	return nil
 }
 
-func submitForPR(request *source.ReleaseRequest) (string, error) {
+func submitPRViaWebhook(request *types.ReleaseRequest) (string, error) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		return "", err
@@ -129,4 +128,18 @@ func getWebhookURL() string {
 	}
 
 	return "https://krew-release-bot.rajatjindal.com/github-action-webhook"
+}
+
+func submitPR(request *types.ReleaseRequest) (string, error) {
+	releaserInst, err := releaser.New("")
+	if err != nil {
+		return "", err
+	}
+
+	pr, err := releaserInst.Release(request)
+	if err != nil {
+		return "", errors.Wrap(err, "opening pr")
+	}
+
+	return fmt.Sprintf("PR %q submitted successfully", pr), nil
 }

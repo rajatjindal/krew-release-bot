@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/krew"
-	"github.com/rajatjindal/krew-release-bot/pkg/source"
+	"github.com/rajatjindal/krew-release-bot/pkg/types"
 	"github.com/sirupsen/logrus"
 )
 
 // Release releases
-func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error) {
+func (releaser *Releaser) Release(request *types.ReleaseRequest) (string, error) {
 	tempdir, err := os.MkdirTemp("", "krew-index-")
 	if err != nil {
 		return "", err

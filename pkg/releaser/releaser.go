@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/pkg/errors"
 	"github.com/rajatjindal/krew-release-bot/pkg/krew"
-	"github.com/rajatjindal/krew-release-bot/pkg/source/actions"
 )
 
 // Releaser is what opens PR
@@ -25,36 +24,30 @@ type Releaser struct {
 	LocalKrewIndexRepoCloneURL    string
 }
 
-func getCloneURL(owner, repo string) string {
-	return fmt.Sprintf("https://github.com/%s/%s.git", owner, repo)
-}
-
-// TODO: get email, userhandle, name from token
-func getUserDetails(_ string) (string, string, string) {
-	return "krew-release-bot", "Krew Release Bot", "krewpluginreleasebot@gmail.com"
-}
-
 // New returns new releaser object
-func New(ghToken string) *Releaser {
-	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(ghToken)
+func New(ghToken string) (*Releaser, error) {
+	tokenUserHandle, tokenUsername, tokenEmail, err := getUserDetails(ghToken)
+	if err != nil {
+		return nil, fmt.Errorf("could not derive user information from the github token")
+	}
 
 	return &Releaser{
 		Token:                         ghToken,
 		TokenEmail:                    tokenEmail,
 		TokenUserHandle:               tokenUserHandle,
 		TokenUsername:                 tokenUsername,
-		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
-		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
-		UpstreamKrewIndexRepoCloneURL: getCloneURL(krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName()),
-		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),
+		UpstreamKrewIndexRepo:         krew.GetUpstreamKrewIndexRepoName(),
+		UpstreamKrewIndexRepoOwner:    krew.GetUpstreamKrewIndexRepoOwner(),
+		UpstreamKrewIndexRepoCloneURL: getCloneURL(krew.GetUpstreamKrewIndexRepoOwner(), krew.GetUpstreamKrewIndexRepoName()),
+		LocalKrewIndexRepo:            getLocalKrewIndexRepoName(),
 		LocalKrewIndexRepoOwner:       tokenUserHandle,
-		LocalKrewIndexRepoCloneURL:    "https://github.com/krew-release-bot/krew-index.git",
-	}
+		LocalKrewIndexRepoCloneURL:    getLocalKrewIndexRepo(tokenUserHandle, getLocalKrewIndexRepoName()),
+	}, nil
 }
 
 // HandleActionLambdaWebhook handles requests from github actions
 func (releaser *Releaser) HandleActionLambdaWebhook(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	hook, err := actions.NewGithubActions()
+	hook, err := newGithubActions()
 	if err != nil {
 		return &events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -86,7 +79,7 @@ func (releaser *Releaser) HandleActionLambdaWebhook(ctx context.Context, request
 
 // HandleActionWebhook handles requests from github actions
 func (releaser *Releaser) HandleActionWebhook(w http.ResponseWriter, r *http.Request) {
-	hook, err := actions.NewGithubActions()
+	hook, err := newGithubActions()
 	if err != nil {
 		http.Error(w, errors.Wrap(err, "creating instance of action handler").Error(), http.StatusInternalServerError)
 		return

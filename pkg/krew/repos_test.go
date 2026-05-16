@@ -40,7 +40,7 @@ func TestGetKrewIndexRepoName(t *testing.T) {
 				tc.setup()
 			}
 
-			actual := GetKrewIndexRepoName()
+			actual := GetUpstreamKrewIndexRepoName()
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
@@ -79,7 +79,7 @@ func TestGetKrewIndexRepoOwner(t *testing.T) {
 				tc.setup()
 			}
 
-			actual := GetKrewIndexRepoOwner()
+			actual := GetUpstreamKrewIndexRepoOwner()
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

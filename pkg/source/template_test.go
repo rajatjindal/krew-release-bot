@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/rajatjindal/krew-release-bot/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )
@@ -66,7 +67,7 @@ func TestRenderTemplate(t *testing.T) {
 		},
 	}
 
-	values := ReleaseRequest{
+	values := types.ReleaseRequest{
 		TagName: "v0.0.2",
 	}
 
