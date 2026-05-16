@@ -91,29 +91,29 @@ func RunAction() error {
 }
 
 func submitReleaseRequest(request *source.ReleaseRequest) (string, error) {
-	token := getInputForAction("index_repo_token")
+	token := getInputForAction("upstream_krew_index_repo_token")
 	if token == "" {
 		if getInputForAction("upstream_krew_index_repo_owner") != "" ||
 			getInputForAction("upstream_krew_index_repo_name") != "" ||
-			getInputForAction("index_repo_provider") != "" ||
+			getInputForAction("upstream_krew_index_repo_provider") != "" ||
 			getInputForAction("upstream_krew_index_repo_clone_url") != "" {
-			return "", fmt.Errorf("custom upstream krew index repo configuration requires index_repo_token so the PR can be opened directly from CI")
+			return "", fmt.Errorf("custom upstream krew index repo configuration requires upstream_krew_index_repo_token so the PR can be opened directly from CI")
 		}
 
 		return submitForPR(request)
 	}
 
-	providerName := getInputForAction("index_repo_provider")
+	providerName := getInputForAction("upstream_krew_index_repo_provider")
 	if providerName == "" {
 		providerName = releaser.ProviderGitHub
 	}
-	prProviderName := getInputForAction("index_pr_provider")
+	prProviderName := getInputForAction("upstream_krew_index_pr_provider")
 	if prProviderName == "" {
 		prProviderName = providerName
 	}
 
 	logrus.Infof(
-		"index_repo_token provided, opening PR directly from CI using git provider %q and pr provider %q",
+		"upstream_krew_index_repo_token provided, opening PR directly from CI using git provider %q and pr provider %q",
 		providerName,
 		prProviderName,
 	)

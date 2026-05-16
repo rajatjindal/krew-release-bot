@@ -75,9 +75,7 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 | ------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
 | workdir            | `env.GITHUB_WORKSPACE` | Overrides the GitHub workspace directory path                                        |
 | krew_template_file | `.krew.yaml`           | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
-| index_repo_token   | empty                  | Optional token with write access to the target index repo. Enables direct PR creation from CI |
-| index_repo_provider | `github`             | Optional git hosting provider for the target index repo                               |
-| index_pr_provider  | `index_repo_provider` | Optional pull request provider for the target index repo                              |
+| upstream_krew_index_repo_token   | empty                  | Optional token with write access to the target index repo. Enables direct PR creation from CI |
 | upstream_krew_index_repo_owner   | `kubernetes-sigs`     | Optional owner for the upstream krew index repo                                       |
 | upstream_krew_index_repo_name    | `krew-index`          | Optional name for the upstream krew index repo                                        |
 | upstream_krew_index_repo_clone_url | provider default    | Optional clone URL override for the upstream krew index repo                          |
@@ -90,16 +88,14 @@ If you want to open PRs against your own index repo instead of `kubernetes-sigs/
 - name: Update new version in custom krew-index
   uses: rajatjindal/krew-release-bot@v0.0.50
   with:
-    index_repo_token: ${{ secrets.KREW_INDEX_TOKEN }}
-    index_repo_provider: github
-    index_pr_provider: github
+    upstream_krew_index_repo_token: ${{ secrets.KREW_INDEX_TOKEN }}
     upstream_krew_index_repo_owner: your-org
     upstream_krew_index_repo_name: custom-krew-index
 ```
 
-When `index_repo_token` is set, the action skips the webhook service, pushes a release branch directly to the configured index repo, and opens the PR from CI.
+When `upstream_krew_index_repo_token` is set, the action skips the webhook service, pushes a release branch directly to the configured index repo, and opens the PR from CI.
 
-The config surface is provider-neutral so git hosting and PR backends can evolve independently. At the moment, the implemented direct git and PR provider is `github`.
+Direct PR support currently only works with GitHub-backed index repos.
 
 # Limitations of krew-release-bot
 

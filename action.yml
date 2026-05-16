@@ -11,12 +11,12 @@ inputs:
     description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
   krew_plugin_release_tag:
     description: "The tag to use as version for krew plugin release. e.g. 'v5.0.0'. Defaults to parsing GITHUB_REF"
-  index_repo_token:
+  upstream_krew_index_repo_token:
     description: "Optional token with write access to the target index repo. When set, the action opens the PR directly from CI instead of using the webhook service."
-  index_repo_provider:
-    description: "Optional git hosting provider for the target index repo. Defaults to github."
-  index_pr_provider:
-    description: "Optional pull request provider for the target index repo. Defaults to index_repo_provider."
+  upstream_krew_index_repo_provider:
+    description: "Optional git hosting provider for the target index repo. Defaults to github. Currently only github is supported."
+  upstream_krew_index_pr_provider:
+    description: "Optional pull request provider for the target index repo. Defaults to upstream_krew_index_repo_provider. Currently only github is supported."
   upstream_krew_index_repo_owner:
     description: "Optional owner for the upstream krew index repo. Defaults to kubernetes-sigs."
   upstream_krew_index_repo_name:
