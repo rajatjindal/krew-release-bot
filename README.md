@@ -6,6 +6,7 @@
 If a release is marked as a 'prerelease' in github, it will not be released to the krew index.
 
 To trigger `krew-release-bot` you can use a `github-action` which sends the event to the bot.
+If you provide a dedicated token for the target krew index repo, the action can also open the PR directly from CI without using the webhook service.
 
 # Basic Setup
 
@@ -16,7 +17,7 @@ To trigger `krew-release-bot` you can use a `github-action` which sends the even
   ```yaml
   - name: Update new version in krew-index
     uses: rajatjindal/krew-release-bot@v0.0.50
-  ```
+```
   Check out the `goreleaser` example below for details.
 
 ##### Example when using go-releaser
@@ -74,6 +75,24 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 | ------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
 | workdir            | `env.GITHUB_WORKSPACE` | Overrides the GitHub workspace directory path                                        |
 | krew_template_file | `.krew.yaml`           | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
+| krew_index_token   | empty                  | Optional GitHub token with write access to the target krew index repo. Enables direct PR creation from CI |
+| krew_index_repo_owner | `kubernetes-sigs`   | Optional owner for the target krew index repo                                        |
+| krew_index_repo_name | `krew-index`         | Optional name for the target krew index repo                                         |
+
+# Direct PR mode for custom krew index repos
+
+If you want to open PRs against your own krew index repo instead of `kubernetes-sigs/krew-index`, provide a token with push and pull request permissions to that repo and set the repo owner/name inputs.
+
+```yaml
+- name: Update new version in custom krew-index
+  uses: rajatjindal/krew-release-bot@v0.0.50
+  with:
+    krew_index_token: ${{ secrets.KREW_INDEX_TOKEN }}
+    krew_index_repo_owner: your-org
+    krew_index_repo_name: custom-krew-index
+```
+
+When `krew_index_token` is set, the action skips the webhook service, pushes a release branch directly to the configured krew index repo, and opens the PR from CI.
 
 # Limitations of krew-release-bot
 

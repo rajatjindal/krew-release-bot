@@ -11,3 +11,9 @@ inputs:
     description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
   krew_plugin_release_tag:
     description: "The tag to use as version for krew plugin release. e.g. 'v5.0.0'. Defaults to parsing GITHUB_REF"
+  krew_index_token:
+    description: "Optional GitHub token with write access to the target krew index repo. When set, the action opens the PR directly from CI instead of using the webhook service."
+  krew_index_repo_owner:
+    description: "Optional owner for the target krew index repo. Defaults to kubernetes-sigs."
+  krew_index_repo_name:
+    description: "Optional name for the target krew index repo. Defaults to krew-index."

@@ -8,9 +8,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
+	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -79,13 +81,29 @@ func RunAction() error {
 	releaseRequest.PluginName = pluginName
 	releaseRequest.ProcessedTemplate = pluginManifest
 
-	pr, err := submitForPR(releaseRequest)
+	pr, err := submitReleaseRequest(releaseRequest)
 	if err != nil {
 		return err
 	}
 
 	logrus.Info(pr)
 	return nil
+}
+
+func submitReleaseRequest(request *source.ReleaseRequest) (string, error) {
+	token := getInputForAction("krew_index_token")
+	if token == "" {
+		if getInputForAction("krew_index_repo_owner") != "" || getInputForAction("krew_index_repo_name") != "" {
+			return "", fmt.Errorf("custom krew index repo requires krew_index_token so the PR can be opened directly from CI")
+		}
+
+		return submitForPR(request)
+	}
+
+	logrus.Info("krew_index_token provided, opening PR directly from CI")
+	r := releaser.New(token)
+	r.ConfigureDirectPRs()
+	return r.Release(request)
 }
 
 func submitForPR(request *source.ReleaseRequest) (string, error) {
@@ -129,4 +147,8 @@ func getWebhookURL() string {
 	}
 
 	return "https://krew-release-bot.rajatjindal.com/github-action-webhook"
+}
+
+func getInputForAction(key string) string {
+	return os.Getenv(fmt.Sprintf("INPUT_%s", strings.ToUpper(key)))
 }
