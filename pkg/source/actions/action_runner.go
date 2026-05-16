@@ -93,16 +93,10 @@ func RunAction() error {
 func submitReleaseRequest(request *source.ReleaseRequest) (string, error) {
 	token := getInputForAction("index_repo_token")
 	if token == "" {
-		token = getInputForAction("krew_index_token")
-	}
-
-	if token == "" {
 		if getInputForAction("index_repo_owner") != "" ||
 			getInputForAction("index_repo_name") != "" ||
 			getInputForAction("index_repo_provider") != "" ||
-			getInputForAction("index_repo_clone_url") != "" ||
-			getInputForAction("krew_index_repo_owner") != "" ||
-			getInputForAction("krew_index_repo_name") != "" {
+			getInputForAction("index_repo_clone_url") != "" {
 			return "", fmt.Errorf("custom index repo configuration requires index_repo_token so the PR can be opened directly from CI")
 		}
 

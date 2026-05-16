@@ -17,11 +17,6 @@ func GetKrewIndexRepoName() string {
 		return override
 	}
 
-	override = os.Getenv("INPUT_KREW_INDEX_REPO_NAME")
-	if override != "" {
-		return override
-	}
-
 	override = os.Getenv("UPSTREAM_KREW_INDEX_REPO_NAME")
 	if override != "" {
 		return override
@@ -37,11 +32,6 @@ func GetKrewIndexRepoOwner() string {
 		return override
 	}
 
-	override = os.Getenv("INPUT_KREW_INDEX_REPO_OWNER")
-	if override != "" {
-		return override
-	}
-
 	override = os.Getenv("UPSTREAM_KREW_INDEX_REPO_OWNER")
 	if override != "" {
 		return override
@@ -53,11 +43,6 @@ func GetKrewIndexRepoOwner() string {
 // GetKrewIndexRepoCloneURL returns the clone URL for the target index repo.
 func GetKrewIndexRepoCloneURL(defaultCloneURL CloneURLFunc) string {
 	override := os.Getenv("INPUT_INDEX_REPO_CLONE_URL")
-	if override != "" {
-		return override
-	}
-
-	override = os.Getenv("INPUT_KREW_INDEX_REPO_CLONE_URL")
 	if override != "" {
 		return override
 	}

@@ -80,9 +80,6 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 | index_repo_owner   | `kubernetes-sigs`     | Optional owner for the target index repo                                              |
 | index_repo_name    | `krew-index`          | Optional name for the target index repo                                               |
 | index_repo_clone_url | provider default    | Optional clone URL override for the target index repo                                 |
-| krew_index_token   | empty                  | Deprecated alias for `index_repo_token`                                               |
-| krew_index_repo_owner | `kubernetes-sigs`   | Deprecated alias for `index_repo_owner`                                               |
-| krew_index_repo_name | `krew-index`         | Deprecated alias for `index_repo_name`                                                |
 
 # Direct PR mode for custom krew index repos
 
