@@ -14,7 +14,7 @@ type CloneURLResolver interface {
 
 // GetKrewIndexRepoName returns the krew-index repo name
 func GetKrewIndexRepoName() string {
-	override := os.Getenv("INPUT_INDEX_REPO_NAME")
+	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_NAME")
 	if override != "" {
 		return override
 	}
@@ -29,7 +29,7 @@ func GetKrewIndexRepoName() string {
 
 // GetKrewIndexRepoOwner returns the krew-index repo owner
 func GetKrewIndexRepoOwner() string {
-	override := os.Getenv("INPUT_INDEX_REPO_OWNER")
+	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_OWNER")
 	if override != "" {
 		return override
 	}
@@ -44,6 +44,6 @@ func GetKrewIndexRepoOwner() string {
 
 // GetKrewIndexRepoCloneURL returns the clone URL for the target index repo.
 func GetKrewIndexRepoCloneURL(resolver CloneURLResolver, owner, repo string) (string, error) {
-	override := os.Getenv("INPUT_INDEX_REPO_CLONE_URL")
+	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL")
 	return resolver.ResolveCloneURL(owner, repo, override)
 }

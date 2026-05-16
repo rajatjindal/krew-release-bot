@@ -78,9 +78,9 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 | index_repo_token   | empty                  | Optional token with write access to the target index repo. Enables direct PR creation from CI |
 | index_repo_provider | `github`             | Optional git hosting provider for the target index repo                               |
 | index_pr_provider  | `index_repo_provider` | Optional pull request provider for the target index repo                              |
-| index_repo_owner   | `kubernetes-sigs`     | Optional owner for the target index repo                                              |
-| index_repo_name    | `krew-index`          | Optional name for the target index repo                                               |
-| index_repo_clone_url | provider default    | Optional clone URL override for the target index repo                                 |
+| upstream_krew_index_repo_owner   | `kubernetes-sigs`     | Optional owner for the upstream krew index repo                                       |
+| upstream_krew_index_repo_name    | `krew-index`          | Optional name for the upstream krew index repo                                        |
+| upstream_krew_index_repo_clone_url | provider default    | Optional clone URL override for the upstream krew index repo                          |
 
 # Direct PR mode for custom krew index repos
 
@@ -93,8 +93,8 @@ If you want to open PRs against your own index repo instead of `kubernetes-sigs/
     index_repo_token: ${{ secrets.KREW_INDEX_TOKEN }}
     index_repo_provider: github
     index_pr_provider: github
-    index_repo_owner: your-org
-    index_repo_name: custom-krew-index
+    upstream_krew_index_repo_owner: your-org
+    upstream_krew_index_repo_name: custom-krew-index
 ```
 
 When `index_repo_token` is set, the action skips the webhook service, pushes a release branch directly to the configured index repo, and opens the PR from CI.

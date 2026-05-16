@@ -27,7 +27,7 @@ func TestGetKrewIndexRepoName(t *testing.T) {
 		{
 			name: "new action input is set to value",
 			setup: func() {
-				os.Setenv("INPUT_INDEX_REPO_NAME", "new-custom-index")
+				os.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_NAME", "new-custom-index")
 			},
 			expected: "new-custom-index",
 		},
@@ -73,7 +73,7 @@ func TestGetKrewIndexRepoOwner(t *testing.T) {
 		{
 			name: "new action input is set to value",
 			setup: func() {
-				os.Setenv("INPUT_INDEX_REPO_OWNER", "new-custom-owner")
+				os.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_OWNER", "new-custom-owner")
 			},
 			expected: "new-custom-owner",
 		},
@@ -115,7 +115,7 @@ func TestGetKrewIndexRepoCloneURL(t *testing.T) {
 		{
 			name: "new input override is set",
 			setup: func() {
-				os.Setenv("INPUT_INDEX_REPO_CLONE_URL", "ssh://example/custom-index.git")
+				os.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL", "ssh://example/custom-index.git")
 			},
 			expected: "ssh://example/custom-index.git",
 			resolver: testCloneURLResolver{},

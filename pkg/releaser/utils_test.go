@@ -115,7 +115,7 @@ func TestNewRejectsUnsupportedPRProvider(t *testing.T) {
 }
 
 func TestNewRejectsUnsafeCloneURL(t *testing.T) {
-	t.Setenv("INPUT_INDEX_REPO_CLONE_URL", "https://evil.example/kubernetes-sigs/krew-index.git")
+	t.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL", "https://evil.example/kubernetes-sigs/krew-index.git")
 
 	_, err := New(ProviderGitHub, "token")
 	if err == nil || err.Error() != "github clone url host must be github.com" {

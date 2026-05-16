@@ -3,7 +3,9 @@ package actions
 import (
 	"os"
 	"testing"
+	"time"
 
+	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -23,6 +25,13 @@ func assertError(t *testing.T, expectedError string, err error) {
 }
 
 func TestRunAction(t *testing.T) {
+	restore := source.SetRetryWaitForTests(func(time.Duration) <-chan time.Time {
+		ch := make(chan time.Time, 1)
+		ch <- time.Now()
+		return ch
+	})
+	defer restore()
+
 	testcases := []struct {
 		name          string
 		setup         func()

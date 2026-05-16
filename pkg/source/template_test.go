@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -98,6 +99,13 @@ func TestRenderTemplate(t *testing.T) {
 }
 
 func TestRenderTemplateRetry(t *testing.T) {
+	restore := SetRetryWaitForTests(func(time.Duration) <-chan time.Time {
+		ch := make(chan time.Time, 1)
+		ch <- time.Now()
+		return ch
+	})
+	defer restore()
+
 	retries := 0
 	handler := http.NewServeMux()
 	handler.HandleFunc("/rajatjindal/kubectl-whoami/releases/download/v0.0.2/kubectl-whoami_v0.0.2_darwin_amd64.tar.gz", func(w http.ResponseWriter, r *http.Request) {

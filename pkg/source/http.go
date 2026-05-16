@@ -17,6 +17,17 @@ const (
 	retryWaitMax = 10 * time.Second
 )
 
+var waitForRetry = time.After
+
+// SetRetryWaitForTests overrides retry waiting and returns a restore function.
+func SetRetryWaitForTests(waitFn func(time.Duration) <-chan time.Time) func() {
+	prev := waitForRetry
+	waitForRetry = waitFn
+	return func() {
+		waitForRetry = prev
+	}
+}
+
 // getWithRetry is basically http.Get with retries
 // we cannot use RoundTripper as gock (lib we use for testing)
 // overrides the Transport and thus we cannot test our retryable transport
@@ -33,7 +44,7 @@ func getWithRetry(uri string) (*http.Response, error) {
 
 		drainBody(resp.Body)
 		wait := backoff(retryWaitMin, retryWaitMax, i)
-		<-time.After(wait)
+		<-waitForRetry(wait)
 	}
 
 	return resp, err

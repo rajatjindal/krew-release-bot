@@ -17,9 +17,9 @@ inputs:
     description: "Optional git hosting provider for the target index repo. Defaults to github."
   index_pr_provider:
     description: "Optional pull request provider for the target index repo. Defaults to index_repo_provider."
-  index_repo_owner:
-    description: "Optional owner for the target index repo. Defaults to kubernetes-sigs."
-  index_repo_name:
-    description: "Optional name for the target index repo. Defaults to krew-index."
-  index_repo_clone_url:
-    description: "Optional clone URL override for the target index repo."
+  upstream_krew_index_repo_owner:
+    description: "Optional owner for the upstream krew index repo. Defaults to kubernetes-sigs."
+  upstream_krew_index_repo_name:
+    description: "Optional name for the upstream krew index repo. Defaults to krew-index."
+  upstream_krew_index_repo_clone_url:
+    description: "Optional clone URL override for the upstream krew index repo."
