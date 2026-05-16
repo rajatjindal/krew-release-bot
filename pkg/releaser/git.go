@@ -28,16 +28,21 @@ const (
 func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
 	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
 	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
-		URL:           r.UpstreamKrewIndexRepoCloneURL,
-		Progress:      os.Stdout,
-		ReferenceName: plumbing.Master,
-		SingleBranch:  true,
-		Auth:          r.getAuth(),
-		RemoteName:    OriginNameUpstream,
+		URL:        r.UpstreamKrewIndexRepoCloneURL,
+		Progress:   os.Stdout,
+		Auth:       r.getAuth(),
+		RemoteName: OriginNameUpstream,
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	head, err := repo.Head()
+	if err != nil {
+		return nil, err
+	}
+	r.UpstreamKrewIndexBaseBranch = head.Name().Short()
+	logrus.Infof("using upstream base branch %s", r.UpstreamKrewIndexBaseBranch)
 
 	logrus.Infof("Adding remote %s at %s", OriginNameLocal, r.LocalKrewIndexRepoCloneURL)
 	_, err = repo.CreateRemote(&config.RemoteConfig{

@@ -72,6 +72,9 @@ func (releaser *Releaser) openPullRequest(request *source.ReleaseRequest) (strin
 	if releaser.PullRequestOpener == nil {
 		return "", fmt.Errorf("no pull request opener configured")
 	}
+	if releaser.UpstreamKrewIndexBaseBranch == "" {
+		return "", fmt.Errorf("no upstream base branch configured")
+	}
 
 	return releaser.PullRequestOpener.Open(
 		releaser.UpstreamKrewIndexRepoOwner,
