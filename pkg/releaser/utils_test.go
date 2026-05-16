@@ -79,6 +79,7 @@ func TestOpenPullRequestRequiresBaseBranch(t *testing.T) {
 
 func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
 	r := &Releaser{
+		RepositoryProvider:          &gitHubRepositoryProvider{},
 		UpstreamKrewIndexRepoOwner:  "acme",
 		UpstreamKrewIndexRepo:       "custom-index",
 		LocalKrewIndexRepoOwner:     "acme",
@@ -102,6 +103,15 @@ func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
 func TestNewRejectsUnsupportedRepoProvider(t *testing.T) {
 	_, err := New("stash", "token")
 	if err == nil || err.Error() != `unsupported repo/pr provider "stash"` {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestNewRejectsUnsafeCloneURL(t *testing.T) {
+	t.Setenv("INPUT_INDEX_REPO_CLONE_URL", "https://evil.example/kubernetes-sigs/krew-index.git")
+
+	_, err := New(ProviderGitHub, "token")
+	if err == nil || err.Error() != "github clone url host must be github.com" {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

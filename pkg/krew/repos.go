@@ -7,8 +7,10 @@ const (
 	krewIndexRepoOwner = "kubernetes-sigs"
 )
 
-// CloneURLFunc builds a clone URL from owner/repo.
-type CloneURLFunc func(owner, repo string) string
+// CloneURLResolver resolves the clone URL for an owner/repo pair.
+type CloneURLResolver interface {
+	ResolveCloneURL(owner, repo, override string) (string, error)
+}
 
 // GetKrewIndexRepoName returns the krew-index repo name
 func GetKrewIndexRepoName() string {
@@ -41,11 +43,7 @@ func GetKrewIndexRepoOwner() string {
 }
 
 // GetKrewIndexRepoCloneURL returns the clone URL for the target index repo.
-func GetKrewIndexRepoCloneURL(defaultCloneURL CloneURLFunc) string {
+func GetKrewIndexRepoCloneURL(resolver CloneURLResolver, owner, repo string) (string, error) {
 	override := os.Getenv("INPUT_INDEX_REPO_CLONE_URL")
-	if override != "" {
-		return override
-	}
-
-	return defaultCloneURL(GetKrewIndexRepoOwner(), GetKrewIndexRepoName())
+	return resolver.ResolveCloneURL(owner, repo, override)
 }

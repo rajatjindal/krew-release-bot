@@ -37,23 +37,23 @@ func (r *Releaser) getTitle(request *source.ReleaseRequest) string {
 }
 
 func (r *Releaser) getBranchName(request *source.ReleaseRequest) string {
-	s := fmt.Sprintf("%s-%s-%s-%s", request.PluginOwner, request.PluginName, request.PluginRepo, request.TagName)
-	fmt.Printf("creating branch %s", s)
-	return s
+	return fmt.Sprintf("%s-%s-%s-%s", request.PluginOwner, request.PluginName, request.PluginRepo, request.TagName)
 }
 
 func (r *Releaser) getHead(request *source.ReleaseRequest) string {
 	branchName := r.getBranchName(request)
-	if r.LocalKrewIndexRepoOwner == r.UpstreamKrewIndexRepoOwner && r.LocalKrewIndexRepo == r.UpstreamKrewIndexRepo {
-		return branchName
+	if r.RepositoryProvider == nil {
+		return fmt.Sprintf("%s:%s", r.TokenUserHandle, branchName)
 	}
 
-	owner := r.LocalKrewIndexRepoOwner
-	if owner == "" {
-		owner = r.TokenUserHandle
-	}
-
-	return fmt.Sprintf("%s:%s", owner, branchName)
+	return r.RepositoryProvider.FormatPullRequestHead(PullRequestHeadInput{
+		BranchName:        branchName,
+		LocalRepoOwner:    r.LocalKrewIndexRepoOwner,
+		LocalRepoName:     r.LocalKrewIndexRepo,
+		UpstreamRepoOwner: r.UpstreamKrewIndexRepoOwner,
+		UpstreamRepoName:  r.UpstreamKrewIndexRepo,
+		TokenUserHandle:   r.TokenUserHandle,
+	})
 }
 
 func (r *Releaser) getPRBody(request *source.ReleaseRequest) string {

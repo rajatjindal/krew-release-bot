@@ -104,10 +104,13 @@ func TestGetKrewIndexRepoCloneURL(t *testing.T) {
 		name     string
 		setup    func()
 		expected string
+		wantErr  string
+		resolver CloneURLResolver
 	}{
 		{
 			name:     "defaults to provider clone url",
 			expected: "test://kubernetes-sigs/krew-index",
+			resolver: testCloneURLResolver{},
 		},
 		{
 			name: "new input override is set",
@@ -115,11 +118,13 @@ func TestGetKrewIndexRepoCloneURL(t *testing.T) {
 				os.Setenv("INPUT_INDEX_REPO_CLONE_URL", "ssh://example/custom-index.git")
 			},
 			expected: "ssh://example/custom-index.git",
+			resolver: testCloneURLResolver{},
 		},
-	}
-
-	defaultCloneURL := func(owner, repo string) string {
-		return "test://" + owner + "/" + repo
+		{
+			name:     "resolver errors are returned",
+			wantErr:  assert.AnError.Error(),
+			resolver: failingCloneURLResolver{},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -129,8 +134,30 @@ func TestGetKrewIndexRepoCloneURL(t *testing.T) {
 				tc.setup()
 			}
 
-			actual := GetKrewIndexRepoCloneURL(defaultCloneURL)
+			actual, err := GetKrewIndexRepoCloneURL(tc.resolver, GetKrewIndexRepoOwner(), GetKrewIndexRepoName())
+			if tc.wantErr != "" {
+				assert.EqualError(t, err, tc.wantErr)
+				return
+			}
+
+			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
+}
+
+type testCloneURLResolver struct{}
+
+func (r testCloneURLResolver) ResolveCloneURL(owner, repo, override string) (string, error) {
+	if override != "" {
+		return override, nil
+	}
+
+	return "test://" + owner + "/" + repo, nil
+}
+
+type failingCloneURLResolver struct{}
+
+func (r failingCloneURLResolver) ResolveCloneURL(_, _, _ string) (string, error) {
+	return "", assert.AnError
 }

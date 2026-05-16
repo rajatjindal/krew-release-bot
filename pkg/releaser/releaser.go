@@ -8,7 +8,7 @@ type Releaser struct {
 	TokenEmail                    string
 	TokenUserHandle               string
 	TokenUsername                 string
-	RepositoryProvider            string
+	RepositoryProvider            RepositoryProvider
 	PullRequestOpener             PullRequestOpener
 	UpstreamKrewIndexRepo         string
 	UpstreamKrewIndexRepoOwner    string
@@ -33,19 +33,24 @@ func New(providerName, token string) (*Releaser, error) {
 
 	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(token)
 
+	upstreamCloneURL, err := krew.GetKrewIndexRepoCloneURL(repoProvider, krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName())
+	if err != nil {
+		return nil, err
+	}
+
 	return &Releaser{
 		Token:                         token,
 		TokenEmail:                    tokenEmail,
 		TokenUserHandle:               tokenUserHandle,
 		TokenUsername:                 tokenUsername,
-		RepositoryProvider:            repoProvider.Name(),
+		RepositoryProvider:            repoProvider,
 		PullRequestOpener:             repoProvider.NewPullRequestOpener(token),
 		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
 		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
-		UpstreamKrewIndexRepoCloneURL: krew.GetKrewIndexRepoCloneURL(repoProvider.CloneURL),
+		UpstreamKrewIndexRepoCloneURL: upstreamCloneURL,
 		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),
 		LocalKrewIndexRepoOwner:       tokenUserHandle,
-		LocalKrewIndexRepoCloneURL:    repoProvider.CloneURL(tokenUserHandle, krew.GetKrewIndexRepoName()),
+		LocalKrewIndexRepoCloneURL:    repoProvider.DefaultCloneURL(tokenUserHandle, krew.GetKrewIndexRepoName()),
 	}, nil
 }
 
