@@ -28,10 +28,13 @@ const (
 func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
 	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
 	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
-		URL:        r.UpstreamKrewIndexRepoCloneURL,
-		Progress:   os.Stdout,
-		Auth:       r.getAuth(),
-		RemoteName: OriginNameUpstream,
+		URL:           r.UpstreamKrewIndexRepoCloneURL,
+		Progress:      os.Stdout,
+		Auth:          r.getAuth(),
+		RemoteName:    OriginNameUpstream,
+		ReferenceName: plumbing.HEAD,
+		SingleBranch:  true,
+		Depth:         1,
 	})
 	if err != nil {
 		return nil, err
