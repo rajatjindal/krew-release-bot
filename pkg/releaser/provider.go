@@ -43,36 +43,96 @@ type PRProvider interface {
 type GitProviderFactory func() GitProvider
 type PRProviderFactory func() PRProvider
 
-var gitProviders = map[string]GitProviderFactory{}
-var prProviders = map[string]PRProviderFactory{}
-
-func init() {
-	RegisterGitProvider(ProviderGitHub, func() GitProvider {
-		return &gitHubGitProvider{}
-	})
-	RegisterPRProvider(ProviderGitHub, func() PRProvider {
-		return &gitHubPRProvider{}
-	})
+type GitProviderRegistration struct {
+	Name    string
+	Factory GitProviderFactory
 }
 
-// RegisterGitProvider makes a git hosting provider available for selection.
-func RegisterGitProvider(name string, factory GitProviderFactory) {
-	normalized := normalizeProviderName(name)
-	if normalized == "" || factory == nil {
-		return
-	}
-
-	gitProviders[normalized] = factory
+type PRProviderRegistration struct {
+	Name    string
+	Factory PRProviderFactory
 }
 
-// RegisterPRProvider makes a pull request provider available for selection.
-func RegisterPRProvider(name string, factory PRProviderFactory) {
-	normalized := normalizeProviderName(name)
-	if normalized == "" || factory == nil {
-		return
+var builtInGitProviderRegistrations = []GitProviderRegistration{
+	{
+		Name: ProviderGitHub,
+		Factory: func() GitProvider {
+			return &gitHubGitProvider{}
+		},
+	},
+}
+
+var builtInPRProviderRegistrations = []PRProviderRegistration{
+	{
+		Name: ProviderGitHub,
+		Factory: func() PRProvider {
+			return &gitHubPRProvider{}
+		},
+	},
+}
+
+type GitProviderRegistry struct {
+	providers map[string]GitProviderFactory
+}
+
+type PRProviderRegistry struct {
+	providers map[string]PRProviderFactory
+}
+
+func NewGitProviderRegistry(registrations ...GitProviderRegistration) (*GitProviderRegistry, error) {
+	registry := &GitProviderRegistry{
+		providers: map[string]GitProviderFactory{},
 	}
 
-	prProviders[normalized] = factory
+	for _, reg := range registrations {
+		if err := registry.RegisterProvider(reg); err != nil {
+			return nil, err
+		}
+	}
+
+	return registry, nil
+}
+
+func NewPRProviderRegistry(registrations ...PRProviderRegistration) (*PRProviderRegistry, error) {
+	registry := &PRProviderRegistry{
+		providers: map[string]PRProviderFactory{},
+	}
+
+	for _, reg := range registrations {
+		if err := registry.RegisterProvider(reg); err != nil {
+			return nil, err
+		}
+	}
+
+	return registry, nil
+}
+
+// RegisterProvider makes a git hosting provider available for selection.
+func (r *GitProviderRegistry) RegisterProvider(reg GitProviderRegistration) error {
+	normalized := normalizeProviderName(reg.Name)
+	if normalized == "" {
+		return fmt.Errorf("git provider registration name is required")
+	}
+	if reg.Factory == nil {
+		return fmt.Errorf("git provider registration %q is missing Factory", reg.Name)
+	}
+
+	r.providers[normalized] = reg.Factory
+	return nil
+}
+
+// RegisterProvider makes a pull request provider available for selection.
+func (r *PRProviderRegistry) RegisterProvider(reg PRProviderRegistration) error {
+	normalized := normalizeProviderName(reg.Name)
+	if normalized == "" {
+		return fmt.Errorf("pr provider registration name is required")
+	}
+	if reg.Factory == nil {
+		return fmt.Errorf("pr provider registration %q is missing Factory", reg.Name)
+	}
+
+	r.providers[normalized] = reg.Factory
+	return nil
 }
 
 type gitHubGitProvider struct{}
@@ -145,13 +205,13 @@ func (p *gitHubPRProvider) FormatPullRequestHead(input PullRequestHeadInput) str
 	return fmt.Sprintf("%s:%s", owner, input.BranchName)
 }
 
-func getGitProvider(name string) (GitProvider, error) {
+func (r *GitProviderRegistry) GetProvider(name string) (GitProvider, error) {
 	normalized := normalizeProviderName(name)
 	if normalized == "" {
 		normalized = ProviderGitHub
 	}
 
-	factory, ok := gitProviders[normalized]
+	factory, ok := r.providers[normalized]
 	if !ok {
 		return nil, fmt.Errorf("unsupported git provider %q", name)
 	}
@@ -159,18 +219,36 @@ func getGitProvider(name string) (GitProvider, error) {
 	return factory(), nil
 }
 
-func getPRProvider(name string) (PRProvider, error) {
+func (r *PRProviderRegistry) GetProvider(name string) (PRProvider, error) {
 	normalized := normalizeProviderName(name)
 	if normalized == "" {
 		normalized = ProviderGitHub
 	}
 
-	factory, ok := prProviders[normalized]
+	factory, ok := r.providers[normalized]
 	if !ok {
 		return nil, fmt.Errorf("unsupported pr provider %q", name)
 	}
 
 	return factory(), nil
+}
+
+func getGitProvider(name string) (GitProvider, error) {
+	registry, err := NewGitProviderRegistry(builtInGitProviderRegistrations...)
+	if err != nil {
+		return nil, err
+	}
+
+	return registry.GetProvider(name)
+}
+
+func getPRProvider(name string) (PRProvider, error) {
+	registry, err := NewPRProviderRegistry(builtInPRProviderRegistrations...)
+	if err != nil {
+		return nil, err
+	}
+
+	return registry.GetProvider(name)
 }
 
 func normalizeProviderName(name string) string {

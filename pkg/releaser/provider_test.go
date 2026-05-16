@@ -2,6 +2,7 @@ package releaser
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,27 +61,115 @@ func TestGitHubProviderResolveCloneURL(t *testing.T) {
 }
 
 func TestProviderRegistrationIsCaseInsensitive(t *testing.T) {
-	RegisterGitProvider("StashGit", func() GitProvider {
-		return &gitHubGitProvider{}
+	gitRegistry, err := NewGitProviderRegistry(GitProviderRegistration{
+		Name: "StashGit",
+		Factory: func() GitProvider {
+			return &gitHubGitProvider{}
+		},
 	})
-	RegisterPRProvider("StashPR", func() PRProvider {
-		return &gitHubPRProvider{}
-	})
-
-	gitProvider, err := getGitProvider("stashgit")
 	if err != nil {
-		t.Fatalf("getGitProvider returned error: %v", err)
+		t.Fatalf("NewGitProviderRegistry returned error: %v", err)
+	}
+	prRegistry, err := NewPRProviderRegistry(PRProviderRegistration{
+		Name: "StashPR",
+		Factory: func() PRProvider {
+			return &gitHubPRProvider{}
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewPRProviderRegistry returned error: %v", err)
+	}
+
+	gitProvider, err := gitRegistry.GetProvider("stashgit")
+	if err != nil {
+		t.Fatalf("GetProvider returned error: %v", err)
 	}
 	if gitProvider.Name() != ProviderGitHub {
 		t.Fatalf("unexpected git provider: %s", gitProvider.Name())
 	}
 
-	prProvider, err := getPRProvider("stashpr")
+	prProvider, err := prRegistry.GetProvider("stashpr")
 	if err != nil {
-		t.Fatalf("getPRProvider returned error: %v", err)
+		t.Fatalf("GetProvider returned error: %v", err)
 	}
 	if prProvider.Name() != ProviderGitHub {
 		t.Fatalf("unexpected pr provider: %s", prProvider.Name())
+	}
+}
+
+func TestGitProviderRegistryRejectsInvalidRegistrations(t *testing.T) {
+	testcases := []struct {
+		name        string
+		reg         GitProviderRegistration
+		expectedErr string
+	}{
+		{
+			name:        "missing name",
+			reg:         GitProviderRegistration{},
+			expectedErr: "git provider registration name is required",
+		},
+		{
+			name: "missing factory",
+			reg: GitProviderRegistration{
+				Name: "github",
+			},
+			expectedErr: `git provider registration "github" is missing Factory`,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			registry, err := NewGitProviderRegistry()
+			if err != nil {
+				t.Fatalf("NewGitProviderRegistry returned error: %v", err)
+			}
+
+			err = registry.RegisterProvider(tc.reg)
+			if err == nil {
+				t.Fatalf("expected error %q, got nil", tc.expectedErr)
+			}
+			if !strings.Contains(err.Error(), tc.expectedErr) {
+				t.Fatalf("expected error %q, got %q", tc.expectedErr, err.Error())
+			}
+		})
+	}
+}
+
+func TestPRProviderRegistryRejectsInvalidRegistrations(t *testing.T) {
+	testcases := []struct {
+		name        string
+		reg         PRProviderRegistration
+		expectedErr string
+	}{
+		{
+			name:        "missing name",
+			reg:         PRProviderRegistration{},
+			expectedErr: "pr provider registration name is required",
+		},
+		{
+			name: "missing factory",
+			reg: PRProviderRegistration{
+				Name: "github",
+			},
+			expectedErr: `pr provider registration "github" is missing Factory`,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			registry, err := NewPRProviderRegistry()
+			if err != nil {
+				t.Fatalf("NewPRProviderRegistry returned error: %v", err)
+			}
+
+			err = registry.RegisterProvider(tc.reg)
+			if err == nil {
+				t.Fatalf("expected error %q, got nil", tc.expectedErr)
+			}
+			if !strings.Contains(err.Error(), tc.expectedErr) {
+				t.Fatalf("expected error %q, got %q", tc.expectedErr, err.Error())
+			}
+		})
 	}
 }
 
