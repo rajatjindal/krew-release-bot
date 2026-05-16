@@ -11,6 +11,8 @@ inputs:
     description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
   krew_plugin_release_tag:
     description: "The tag to use as version for krew plugin release. e.g. 'v5.0.0'. Defaults to parsing GITHUB_REF"
+  dry_run:
+    description: "Optional flag to render the release request and skip webhook or PR submission."
   upstream_krew_index_repo_token:
     description: "Optional token with write access to the target index repo. When set, the action opens the PR directly from CI instead of using the webhook service."
   upstream_krew_index_repo_owner:

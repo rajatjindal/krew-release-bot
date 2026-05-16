@@ -1,8 +1,6 @@
 package releaser
 
 import (
-	"os"
-
 	"github.com/rajatjindal/krew-release-bot/pkg/krew"
 )
 
@@ -24,18 +22,24 @@ type Releaser struct {
 	LocalKrewIndexRepoCloneURL    string
 }
 
+type IndexRepoConfig struct {
+	Owner    string
+	Name     string
+	CloneURL string
+}
+
 // TODO: get email, userhandle, name from token
 func getUserDetails(_ string) (string, string, string) {
 	return "krew-release-bot", "Krew Release Bot", "krewpluginreleasebot@gmail.com"
 }
 
 // New returns new releaser object
-func New(providerName, token string) (*Releaser, error) {
-	return NewWithProviders(providerName, providerName, token)
+func New(providerName, token string, indexRepo IndexRepoConfig) (*Releaser, error) {
+	return NewWithProviders(providerName, providerName, token, indexRepo)
 }
 
 // NewWithProviders returns a releaser configured with separate git and PR providers.
-func NewWithProviders(gitProviderName, prProviderName, token string) (*Releaser, error) {
+func NewWithProviders(gitProviderName, prProviderName, token string, indexRepo IndexRepoConfig) (*Releaser, error) {
 	gitProvider, err := getGitProvider(gitProviderName)
 	if err != nil {
 		return nil, err
@@ -47,7 +51,9 @@ func NewWithProviders(gitProviderName, prProviderName, token string) (*Releaser,
 
 	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(token)
 
-	upstreamCloneURL, err := getUpstreamKrewIndexRepoCloneURL(gitProvider, krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName())
+	indexRepo = withDefaultIndexRepoConfig(indexRepo)
+
+	upstreamCloneURL, err := resolveUpstreamKrewIndexRepoCloneURL(gitProvider, indexRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +66,12 @@ func NewWithProviders(gitProviderName, prProviderName, token string) (*Releaser,
 		GitProvider:                   gitProvider,
 		PRProvider:                    prProvider,
 		PullRequestOpener:             prProvider.NewPullRequestOpener(token),
-		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
-		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
+		UpstreamKrewIndexRepo:         indexRepo.Name,
+		UpstreamKrewIndexRepoOwner:    indexRepo.Owner,
 		UpstreamKrewIndexRepoCloneURL: upstreamCloneURL,
-		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),
+		LocalKrewIndexRepo:            indexRepo.Name,
 		LocalKrewIndexRepoOwner:       tokenUserHandle,
-		LocalKrewIndexRepoCloneURL:    gitProvider.DefaultCloneURL(tokenUserHandle, krew.GetKrewIndexRepoName()),
+		LocalKrewIndexRepoCloneURL:    gitProvider.DefaultCloneURL(tokenUserHandle, indexRepo.Name),
 	}, nil
 }
 
@@ -76,7 +82,18 @@ func (r *Releaser) ConfigureDirectPRs() {
 	r.LocalKrewIndexRepoCloneURL = r.UpstreamKrewIndexRepoCloneURL
 }
 
-func getUpstreamKrewIndexRepoCloneURL(gitProvider GitProvider, owner, repo string) (string, error) {
-	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL")
-	return gitProvider.ResolveCloneURL(owner, repo, override)
+func withDefaultIndexRepoConfig(indexRepo IndexRepoConfig) IndexRepoConfig {
+	if indexRepo.Owner == "" {
+		indexRepo.Owner = krew.DefaultIndexRepoOwner
+	}
+	if indexRepo.Name == "" {
+		indexRepo.Name = krew.DefaultIndexRepoName
+	}
+
+	return indexRepo
+}
+
+func resolveUpstreamKrewIndexRepoCloneURL(gitProvider GitProvider, indexRepo IndexRepoConfig) (string, error) {
+	indexRepo = withDefaultIndexRepoConfig(indexRepo)
+	return gitProvider.ResolveCloneURL(indexRepo.Owner, indexRepo.Name, indexRepo.CloneURL)
 }

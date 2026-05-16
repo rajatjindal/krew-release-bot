@@ -1,7 +1,6 @@
 package releaser
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -193,13 +192,13 @@ func (p testGitProvider) ResolveCloneURL(owner, repo, override string) (string, 
 }
 func (p testGitProvider) GetAuth(_, _ string) transport.AuthMethod { return nil }
 
-func TestGetUpstreamKrewIndexRepoCloneURL(t *testing.T) {
+func TestResolveUpstreamKrewIndexRepoCloneURL(t *testing.T) {
 	testcases := []struct {
-		name     string
-		setup    func()
-		expected string
-		wantErr  string
-		provider GitProvider
+		name      string
+		expected  string
+		wantErr   string
+		provider  GitProvider
+		indexRepo IndexRepoConfig
 	}{
 		{
 			name:     "defaults to provider clone url",
@@ -207,12 +206,12 @@ func TestGetUpstreamKrewIndexRepoCloneURL(t *testing.T) {
 			provider: testGitProvider{},
 		},
 		{
-			name: "new input override is set",
-			setup: func() {
-				os.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL", "ssh://example/custom-index.git")
-			},
+			name:     "clone url override is set",
 			expected: "ssh://example/custom-index.git",
 			provider: testGitProvider{},
+			indexRepo: IndexRepoConfig{
+				CloneURL: "ssh://example/custom-index.git",
+			},
 		},
 		{
 			name:     "provider errors are returned",
@@ -223,12 +222,7 @@ func TestGetUpstreamKrewIndexRepoCloneURL(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			os.Clearenv()
-			if tc.setup != nil {
-				tc.setup()
-			}
-
-			actual, err := getUpstreamKrewIndexRepoCloneURL(tc.provider, "kubernetes-sigs", "krew-index")
+			actual, err := resolveUpstreamKrewIndexRepoCloneURL(tc.provider, tc.indexRepo)
 			if tc.wantErr != "" {
 				assert.EqualError(t, err, tc.wantErr)
 				return

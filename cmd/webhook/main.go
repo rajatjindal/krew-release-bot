@@ -10,7 +10,7 @@ import (
 
 func main() {
 	ghToken := os.Getenv("GH_TOKEN")
-	releaser, err := releaser.New(releaser.ProviderGitHub, ghToken)
+	releaser, err := releaser.New(releaser.ProviderGitHub, ghToken, releaser.IndexRepoConfig{})
 	if err != nil {
 		panic(err)
 	}

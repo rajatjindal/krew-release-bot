@@ -75,10 +75,30 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 | ------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
 | workdir            | `env.GITHUB_WORKSPACE` | Overrides the GitHub workspace directory path                                        |
 | krew_template_file | `.krew.yaml`           | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
+| dry_run            | `false`                | Renders the release request and skips webhook or PR submission                        |
 | upstream_krew_index_repo_token   | empty                  | Optional token with write access to the target index repo. Enables direct PR creation from CI |
 | upstream_krew_index_repo_owner   | `kubernetes-sigs`     | Optional owner for the upstream krew index repo                                       |
 | upstream_krew_index_repo_name    | `krew-index`          | Optional name for the upstream krew index repo                                        |
 | upstream_krew_index_repo_clone_url | provider default    | Optional clone URL override for the upstream krew index repo                          |
+
+# Dry run
+
+To exercise the full action path without sending the webhook request or opening a PR, enable dry-run mode.
+
+CLI:
+
+```bash
+go run ./cmd/action action --dry-run
+```
+
+GitHub Actions:
+
+```yaml
+- name: Dry run krew release request
+  uses: rajatjindal/krew-release-bot@v0.0.50
+  with:
+    dry_run: true
+```
 
 # Direct PR mode for custom krew index repos
 

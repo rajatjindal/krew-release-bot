@@ -101,23 +101,23 @@ func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
 }
 
 func TestNewRejectsUnsupportedRepoProvider(t *testing.T) {
-	_, err := NewWithProviders("stash", ProviderGitHub, "token")
+	_, err := NewWithProviders("stash", ProviderGitHub, "token", IndexRepoConfig{})
 	if err == nil || err.Error() != `unsupported git provider "stash"` {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestNewRejectsUnsupportedPRProvider(t *testing.T) {
-	_, err := NewWithProviders(ProviderGitHub, "stash", "token")
+	_, err := NewWithProviders(ProviderGitHub, "stash", "token", IndexRepoConfig{})
 	if err == nil || err.Error() != `unsupported pr provider "stash"` {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestNewRejectsUnsafeCloneURL(t *testing.T) {
-	t.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL", "https://evil.example/kubernetes-sigs/krew-index.git")
-
-	_, err := New(ProviderGitHub, "token")
+	_, err := New(ProviderGitHub, "token", IndexRepoConfig{
+		CloneURL: "https://evil.example/kubernetes-sigs/krew-index.git",
+	})
 	if err == nil || err.Error() != "github clone url host must be github.com" {
 		t.Fatalf("unexpected error: %v", err)
 	}

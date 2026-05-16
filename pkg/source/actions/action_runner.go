@@ -2,7 +2,6 @@ package actions
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,24 +11,52 @@ import (
 	"time"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
+	"github.com/rajatjindal/krew-release-bot/pkg/krew"
 	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
-func getHTTPClient() *http.Client {
-	if os.Getenv("GITHUB_TOKEN") != "" {
-		logrus.Info("GITHUB_TOKEN env variable found, using authenticated requests.")
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
-		return oauth2.NewClient(context.TODO(), ts)
-	}
+type RunOptions struct {
+	DryRun *bool
+}
 
-	return nil
+type releaseMetadata struct {
+	Tag          string
+	PluginOwner  string
+	PluginRepo   string
+	Actor        string
+	TemplateFile string
+}
+
+type directPRConfig struct {
+	Token       string
+	GitProvider string
+	PRProvider  string
+	TargetRepo  releaser.IndexRepoConfig
+}
+
+type actionConfig struct {
+	DryRun     bool
+	WebhookURL string
+	DirectPR   directPRConfig
+}
+
+var runDirectPRRelease = func(config directPRConfig, request *source.ReleaseRequest) (string, error) {
+	r, err := releaser.NewWithProviders(config.GitProvider, config.PRProvider, config.Token, config.TargetRepo)
+	if err != nil {
+		return "", err
+	}
+	r.ConfigureDirectPRs()
+	return r.Release(request)
 }
 
 // RunAction runs the github action
 func RunAction() error {
+	return RunActionWithOptions(RunOptions{})
+}
+
+func RunActionWithOptions(options RunOptions) error {
 	provider, err := cicd.GetProvider()
 	if err != nil {
 		return err
@@ -39,40 +66,32 @@ func RunAction() error {
 		return fmt.Errorf("failed to identify the CI/CD provider")
 	}
 
-	tag, err := provider.GetTag()
+	metadata, err := resolveReleaseMetadata(provider)
 	if err != nil {
 		return err
 	}
 
-	owner, repo, err := provider.GetOwnerAndRepo()
-	if err != nil {
-		return err
-	}
-
-	actor, err := provider.GetActor()
-	if err != nil {
-		return err
-	}
+	config := resolveActionConfig(options)
 
 	// this currently works only for GitHub.
 	// for travisci and circleci it always return false, nil
-	prerelease, err := provider.IsPreRelease(owner, repo, tag)
+	prerelease, err := provider.IsPreRelease(metadata.PluginOwner, metadata.PluginRepo, metadata.Tag)
 	if err != nil {
 		return err
 	}
 
 	if prerelease {
-		return fmt.Errorf("release with tag %q is a pre-release. skipping", tag)
+		return fmt.Errorf("release with tag %q is a pre-release. skipping", metadata.Tag)
 	}
 
-	templateFile := provider.GetTemplateFile()
+	templateFile := metadata.TemplateFile
 	logrus.Infof("using template file %q", templateFile)
 
 	releaseRequest := &source.ReleaseRequest{
-		TagName:            tag,
-		PluginOwner:        owner,
-		PluginRepo:         repo,
-		PluginReleaseActor: actor,
+		TagName:            metadata.Tag,
+		PluginOwner:        metadata.PluginOwner,
+		PluginRepo:         metadata.PluginRepo,
+		PluginReleaseActor: metadata.Actor,
 		TemplateFile:       templateFile,
 	}
 
@@ -84,7 +103,11 @@ func RunAction() error {
 	releaseRequest.PluginName = pluginName
 	releaseRequest.ProcessedTemplate = pluginManifest
 
-	pr, err := submitReleaseRequest(releaseRequest)
+	if config.DryRun {
+		return logDryRun(releaseRequest, config)
+	}
+
+	pr, err := submitReleaseRequest(releaseRequest, config)
 	if err != nil {
 		return err
 	}
@@ -93,48 +116,115 @@ func RunAction() error {
 	return nil
 }
 
-func submitReleaseRequest(request *source.ReleaseRequest) (string, error) {
-	token := getInputForAction("upstream_krew_index_repo_token")
-	if token == "" {
-		if getInputForAction("upstream_krew_index_repo_owner") != "" ||
-			getInputForAction("upstream_krew_index_repo_name") != "" ||
-			getInputForAction("upstream_krew_index_repo_provider") != "" ||
-			getInputForAction("upstream_krew_index_repo_clone_url") != "" {
+func resolveReleaseMetadata(provider cicd.Provider) (releaseMetadata, error) {
+	tag, err := provider.GetTag()
+	if err != nil {
+		return releaseMetadata{}, err
+	}
+
+	owner, repo, err := provider.GetOwnerAndRepo()
+	if err != nil {
+		return releaseMetadata{}, err
+	}
+
+	actor, err := provider.GetActor()
+	if err != nil {
+		return releaseMetadata{}, err
+	}
+
+	return releaseMetadata{
+		Tag:          tag,
+		PluginOwner:  owner,
+		PluginRepo:   repo,
+		Actor:        actor,
+		TemplateFile: provider.GetTemplateFile(),
+	}, nil
+}
+
+func resolveActionConfig(options RunOptions) actionConfig {
+	dryRun := isDryRunEnabled()
+	if options.DryRun != nil {
+		dryRun = *options.DryRun
+	}
+
+	directPR := directPRConfig{
+		Token:       getInputForAction("upstream_krew_index_repo_token"),
+		GitProvider: getInputForAction("upstream_krew_index_repo_provider"),
+		PRProvider:  getInputForAction("upstream_krew_index_pr_provider"),
+		TargetRepo: releaser.IndexRepoConfig{
+			Owner:    firstNonEmpty(getInputForAction("upstream_krew_index_repo_owner"), krew.DefaultIndexRepoOwner),
+			Name:     firstNonEmpty(getInputForAction("upstream_krew_index_repo_name"), krew.DefaultIndexRepoName),
+			CloneURL: getInputForAction("upstream_krew_index_repo_clone_url"),
+		},
+	}
+
+	if directPR.GitProvider == "" {
+		directPR.GitProvider = releaser.ProviderGitHub
+	}
+	if directPR.PRProvider == "" {
+		directPR.PRProvider = directPR.GitProvider
+	}
+
+	return actionConfig{
+		DryRun:     dryRun,
+		WebhookURL: getWebhookURL(),
+		DirectPR:   directPR,
+	}
+}
+
+func logDryRun(request *source.ReleaseRequest, config actionConfig) error {
+	body, err := json.MarshalIndent(request, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	mode := "webhook"
+	if config.DirectPR.Token != "" {
+		mode = "direct-pr"
+	}
+
+	logrus.Infof("dry-run enabled, skipping %s submission", mode)
+	fmt.Println(string(body))
+	return nil
+}
+
+func submitReleaseRequest(request *source.ReleaseRequest, config actionConfig) (string, error) {
+	if config.DirectPR.Token == "" {
+		if hasCustomTargetRepo(config.DirectPR) {
 			return "", fmt.Errorf("custom upstream krew index repo configuration requires upstream_krew_index_repo_token so the PR can be opened directly from CI")
 		}
 
-		return submitForPR(request)
-	}
-
-	providerName := getInputForAction("upstream_krew_index_repo_provider")
-	if providerName == "" {
-		providerName = releaser.ProviderGitHub
-	}
-	prProviderName := getInputForAction("upstream_krew_index_pr_provider")
-	if prProviderName == "" {
-		prProviderName = providerName
+		return submitForPR(request, config.WebhookURL)
 	}
 
 	logrus.Infof(
 		"upstream_krew_index_repo_token provided, opening PR directly from CI using git provider %q and pr provider %q",
-		providerName,
-		prProviderName,
+		config.DirectPR.GitProvider,
+		config.DirectPR.PRProvider,
 	)
-	r, err := releaser.NewWithProviders(providerName, prProviderName, token)
-	if err != nil {
-		return "", err
-	}
-	r.ConfigureDirectPRs()
-	return r.Release(request)
+	return runDirectPRRelease(config.DirectPR, request)
 }
 
-func submitForPR(request *source.ReleaseRequest) (string, error) {
+func hasCustomTargetRepo(config directPRConfig) bool {
+	owner := firstNonEmpty(config.TargetRepo.Owner, krew.DefaultIndexRepoOwner)
+	name := firstNonEmpty(config.TargetRepo.Name, krew.DefaultIndexRepoName)
+	gitProvider := firstNonEmpty(config.GitProvider, releaser.ProviderGitHub)
+	prProvider := firstNonEmpty(config.PRProvider, gitProvider)
+
+	return owner != krew.DefaultIndexRepoOwner ||
+		name != krew.DefaultIndexRepoName ||
+		config.TargetRepo.CloneURL != "" ||
+		gitProvider != releaser.ProviderGitHub ||
+		prProvider != releaser.ProviderGitHub
+}
+
+func submitForPR(request *source.ReleaseRequest, webhookURL string) (string, error) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		return "", err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, getWebhookURL(), bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, webhookURL, bytes.NewBuffer(body))
 	if err != nil {
 		return "", err
 	}
@@ -173,4 +263,19 @@ func getWebhookURL() string {
 
 func getInputForAction(key string) string {
 	return os.Getenv(fmt.Sprintf("INPUT_%s", strings.ToUpper(key)))
+}
+
+func isDryRunEnabled() bool {
+	value := strings.TrimSpace(strings.ToLower(getInputForAction("dry_run")))
+	return value == "1" || value == "true" || value == "yes"
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+
+	return ""
 }
