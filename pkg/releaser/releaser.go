@@ -1,10 +1,6 @@
 package releaser
 
-import (
-	"fmt"
-
-	"github.com/rajatjindal/krew-release-bot/pkg/krew"
-)
+import "github.com/rajatjindal/krew-release-bot/pkg/krew"
 
 // Releaser is what opens PR
 type Releaser struct {
@@ -12,6 +8,7 @@ type Releaser struct {
 	TokenEmail                    string
 	TokenUserHandle               string
 	TokenUsername                 string
+	RepositoryProvider            string
 	PullRequestOpener             PullRequestOpener
 	UpstreamKrewIndexRepo         string
 	UpstreamKrewIndexRepoOwner    string
@@ -22,32 +19,34 @@ type Releaser struct {
 	LocalKrewIndexRepoCloneURL    string
 }
 
-func getCloneURL(owner, repo string) string {
-	return fmt.Sprintf("https://github.com/%s/%s.git", owner, repo)
-}
-
 // TODO: get email, userhandle, name from token
 func getUserDetails(_ string) (string, string, string) {
 	return "krew-release-bot", "Krew Release Bot", "krewpluginreleasebot@gmail.com"
 }
 
 // New returns new releaser object
-func New(ghToken string) *Releaser {
-	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(ghToken)
+func New(providerName, token string) (*Releaser, error) {
+	repoProvider, err := getRepositoryProvider(providerName)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(token)
 
 	return &Releaser{
-		Token:                         ghToken,
+		Token:                         token,
 		TokenEmail:                    tokenEmail,
 		TokenUserHandle:               tokenUserHandle,
 		TokenUsername:                 tokenUsername,
-		PullRequestOpener:             newGitHubPullRequestOpener(ghToken),
+		RepositoryProvider:            repoProvider.Name(),
+		PullRequestOpener:             repoProvider.NewPullRequestOpener(token),
 		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
 		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
-		UpstreamKrewIndexRepoCloneURL: getCloneURL(krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName()),
+		UpstreamKrewIndexRepoCloneURL: krew.GetKrewIndexRepoCloneURL(repoProvider.CloneURL),
 		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),
 		LocalKrewIndexRepoOwner:       tokenUserHandle,
-		LocalKrewIndexRepoCloneURL:    "https://github.com/krew-release-bot/krew-index.git",
-	}
+		LocalKrewIndexRepoCloneURL:    repoProvider.CloneURL(tokenUserHandle, krew.GetKrewIndexRepoName()),
+	}, nil
 }
 
 // ConfigureDirectPRs updates the releaser to push branches directly to the target index repo.
