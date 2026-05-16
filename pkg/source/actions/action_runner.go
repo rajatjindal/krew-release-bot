@@ -31,7 +31,7 @@ func RunAction() error {
 	provider := cicd.GetProvider()
 
 	if provider == nil {
-		logrus.Fatal("failed to identify the CI/CD provider")
+		return fmt.Errorf("failed to identify the CI/CD provider")
 	}
 
 	tag, err := provider.GetTag()
