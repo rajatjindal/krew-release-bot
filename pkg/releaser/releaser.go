@@ -1,6 +1,10 @@
 package releaser
 
-import "github.com/rajatjindal/krew-release-bot/pkg/krew"
+import (
+	"os"
+
+	"github.com/rajatjindal/krew-release-bot/pkg/krew"
+)
 
 // Releaser is what opens PR
 type Releaser struct {
@@ -43,7 +47,7 @@ func NewWithProviders(gitProviderName, prProviderName, token string) (*Releaser,
 
 	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(token)
 
-	upstreamCloneURL, err := krew.GetKrewIndexRepoCloneURL(gitProvider, krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName())
+	upstreamCloneURL, err := getUpstreamKrewIndexRepoCloneURL(gitProvider, krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName())
 	if err != nil {
 		return nil, err
 	}
@@ -70,4 +74,9 @@ func (r *Releaser) ConfigureDirectPRs() {
 	r.LocalKrewIndexRepo = r.UpstreamKrewIndexRepo
 	r.LocalKrewIndexRepoOwner = r.UpstreamKrewIndexRepoOwner
 	r.LocalKrewIndexRepoCloneURL = r.UpstreamKrewIndexRepoCloneURL
+}
+
+func getUpstreamKrewIndexRepoCloneURL(gitProvider GitProvider, owner, repo string) (string, error) {
+	override := os.Getenv("INPUT_UPSTREAM_KREW_INDEX_REPO_CLONE_URL")
+	return gitProvider.ResolveCloneURL(owner, repo, override)
 }
