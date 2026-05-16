@@ -15,7 +15,7 @@ const (
 	ProviderGitHub = "github"
 )
 
-// PullRequestHeadInput captures the fields a provider may need to format a PR head ref.
+// PullRequestHeadInput captures the fields a PR provider may need to format a head ref.
 type PullRequestHeadInput struct {
 	BranchName        string
 	LocalRepoOwner    string
@@ -25,46 +25,67 @@ type PullRequestHeadInput struct {
 	TokenUserHandle   string
 }
 
-// RepositoryProvider encapsulates provider-specific repository behavior.
-type RepositoryProvider interface {
+// GitProvider encapsulates provider-specific git hosting behavior.
+type GitProvider interface {
 	Name() string
 	DefaultCloneURL(owner, repo string) string
 	ResolveCloneURL(owner, repo, override string) (string, error)
-	NewPullRequestOpener(token string) PullRequestOpener
 	GetAuth(tokenUserHandle, token string) transport.AuthMethod
+}
+
+// PRProvider encapsulates provider-specific pull request behavior.
+type PRProvider interface {
+	Name() string
+	NewPullRequestOpener(token string) PullRequestOpener
 	FormatPullRequestHead(input PullRequestHeadInput) string
 }
 
-type RepositoryProviderFactory func() RepositoryProvider
+type GitProviderFactory func() GitProvider
+type PRProviderFactory func() PRProvider
 
-var repositoryProviders = map[string]RepositoryProviderFactory{}
+var gitProviders = map[string]GitProviderFactory{}
+var prProviders = map[string]PRProviderFactory{}
 
 func init() {
-	RegisterRepositoryProvider(ProviderGitHub, func() RepositoryProvider {
-		return &gitHubRepositoryProvider{}
+	RegisterGitProvider(ProviderGitHub, func() GitProvider {
+		return &gitHubGitProvider{}
+	})
+	RegisterPRProvider(ProviderGitHub, func() PRProvider {
+		return &gitHubPRProvider{}
 	})
 }
 
-// RegisterRepositoryProvider makes a repo/PR provider available for selection.
-func RegisterRepositoryProvider(name string, factory RepositoryProviderFactory) {
-	if name == "" || factory == nil {
+// RegisterGitProvider makes a git hosting provider available for selection.
+func RegisterGitProvider(name string, factory GitProviderFactory) {
+	normalized := normalizeProviderName(name)
+	if normalized == "" || factory == nil {
 		return
 	}
 
-	repositoryProviders[name] = factory
+	gitProviders[normalized] = factory
 }
 
-type gitHubRepositoryProvider struct{}
+// RegisterPRProvider makes a pull request provider available for selection.
+func RegisterPRProvider(name string, factory PRProviderFactory) {
+	normalized := normalizeProviderName(name)
+	if normalized == "" || factory == nil {
+		return
+	}
 
-func (p *gitHubRepositoryProvider) Name() string {
+	prProviders[normalized] = factory
+}
+
+type gitHubGitProvider struct{}
+
+func (p *gitHubGitProvider) Name() string {
 	return ProviderGitHub
 }
 
-func (p *gitHubRepositoryProvider) DefaultCloneURL(owner, repo string) string {
+func (p *gitHubGitProvider) DefaultCloneURL(owner, repo string) string {
 	return fmt.Sprintf("https://github.com/%s/%s.git", owner, repo)
 }
 
-func (p *gitHubRepositoryProvider) ResolveCloneURL(owner, repo, override string) (string, error) {
+func (p *gitHubGitProvider) ResolveCloneURL(owner, repo, override string) (string, error) {
 	if override == "" {
 		return p.DefaultCloneURL(owner, repo), nil
 	}
@@ -94,18 +115,24 @@ func (p *gitHubRepositoryProvider) ResolveCloneURL(owner, repo, override string)
 	return override, nil
 }
 
-func (p *gitHubRepositoryProvider) NewPullRequestOpener(token string) PullRequestOpener {
-	return newGitHubPullRequestOpener(token)
-}
-
-func (p *gitHubRepositoryProvider) GetAuth(tokenUserHandle, token string) transport.AuthMethod {
+func (p *gitHubGitProvider) GetAuth(tokenUserHandle, token string) transport.AuthMethod {
 	return &githttp.BasicAuth{
 		Username: tokenUserHandle,
 		Password: token,
 	}
 }
 
-func (p *gitHubRepositoryProvider) FormatPullRequestHead(input PullRequestHeadInput) string {
+type gitHubPRProvider struct{}
+
+func (p *gitHubPRProvider) Name() string {
+	return ProviderGitHub
+}
+
+func (p *gitHubPRProvider) NewPullRequestOpener(token string) PullRequestOpener {
+	return newGitHubPullRequestOpener(token)
+}
+
+func (p *gitHubPRProvider) FormatPullRequestHead(input PullRequestHeadInput) string {
 	if input.LocalRepoOwner == input.UpstreamRepoOwner && input.LocalRepoName == input.UpstreamRepoName {
 		return input.BranchName
 	}
@@ -118,15 +145,34 @@ func (p *gitHubRepositoryProvider) FormatPullRequestHead(input PullRequestHeadIn
 	return fmt.Sprintf("%s:%s", owner, input.BranchName)
 }
 
-func getRepositoryProvider(name string) (RepositoryProvider, error) {
-	if name == "" {
-		name = ProviderGitHub
+func getGitProvider(name string) (GitProvider, error) {
+	normalized := normalizeProviderName(name)
+	if normalized == "" {
+		normalized = ProviderGitHub
 	}
 
-	factory, ok := repositoryProviders[strings.ToLower(name)]
+	factory, ok := gitProviders[normalized]
 	if !ok {
-		return nil, fmt.Errorf("unsupported repo/pr provider %q", name)
+		return nil, fmt.Errorf("unsupported git provider %q", name)
 	}
 
 	return factory(), nil
+}
+
+func getPRProvider(name string) (PRProvider, error) {
+	normalized := normalizeProviderName(name)
+	if normalized == "" {
+		normalized = ProviderGitHub
+	}
+
+	factory, ok := prProviders[normalized]
+	if !ok {
+		return nil, fmt.Errorf("unsupported pr provider %q", name)
+	}
+
+	return factory(), nil
+}
+
+func normalizeProviderName(name string) string {
+	return strings.ToLower(strings.TrimSpace(name))
 }

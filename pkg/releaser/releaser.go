@@ -8,7 +8,8 @@ type Releaser struct {
 	TokenEmail                    string
 	TokenUserHandle               string
 	TokenUsername                 string
-	RepositoryProvider            RepositoryProvider
+	GitProvider                   GitProvider
+	PRProvider                    PRProvider
 	PullRequestOpener             PullRequestOpener
 	UpstreamKrewIndexRepo         string
 	UpstreamKrewIndexRepoOwner    string
@@ -26,14 +27,23 @@ func getUserDetails(_ string) (string, string, string) {
 
 // New returns new releaser object
 func New(providerName, token string) (*Releaser, error) {
-	repoProvider, err := getRepositoryProvider(providerName)
+	return NewWithProviders(providerName, providerName, token)
+}
+
+// NewWithProviders returns a releaser configured with separate git and PR providers.
+func NewWithProviders(gitProviderName, prProviderName, token string) (*Releaser, error) {
+	gitProvider, err := getGitProvider(gitProviderName)
+	if err != nil {
+		return nil, err
+	}
+	prProvider, err := getPRProvider(prProviderName)
 	if err != nil {
 		return nil, err
 	}
 
 	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(token)
 
-	upstreamCloneURL, err := krew.GetKrewIndexRepoCloneURL(repoProvider, krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName())
+	upstreamCloneURL, err := krew.GetKrewIndexRepoCloneURL(gitProvider, krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName())
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +53,15 @@ func New(providerName, token string) (*Releaser, error) {
 		TokenEmail:                    tokenEmail,
 		TokenUserHandle:               tokenUserHandle,
 		TokenUsername:                 tokenUsername,
-		RepositoryProvider:            repoProvider,
-		PullRequestOpener:             repoProvider.NewPullRequestOpener(token),
+		GitProvider:                   gitProvider,
+		PRProvider:                    prProvider,
+		PullRequestOpener:             prProvider.NewPullRequestOpener(token),
 		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
 		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
 		UpstreamKrewIndexRepoCloneURL: upstreamCloneURL,
 		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),
 		LocalKrewIndexRepoOwner:       tokenUserHandle,
-		LocalKrewIndexRepoCloneURL:    repoProvider.DefaultCloneURL(tokenUserHandle, krew.GetKrewIndexRepoName()),
+		LocalKrewIndexRepoCloneURL:    gitProvider.DefaultCloneURL(tokenUserHandle, krew.GetKrewIndexRepoName()),
 	}, nil
 }
 

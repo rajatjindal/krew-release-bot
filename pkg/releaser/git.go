@@ -130,12 +130,12 @@ func getPushRefSpec(branchName string) string {
 }
 
 func (r *Releaser) getAuth() transport.AuthMethod {
-	if r.RepositoryProvider == nil {
+	if r.GitProvider == nil {
 		return &githttp.BasicAuth{
 			Username: r.TokenUserHandle,
 			Password: r.Token,
 		}
 	}
 
-	return r.RepositoryProvider.GetAuth(r.TokenUserHandle, r.Token)
+	return r.GitProvider.GetAuth(r.TokenUserHandle, r.Token)
 }

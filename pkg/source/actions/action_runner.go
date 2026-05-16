@@ -107,9 +107,17 @@ func submitReleaseRequest(request *source.ReleaseRequest) (string, error) {
 	if providerName == "" {
 		providerName = releaser.ProviderGitHub
 	}
+	prProviderName := getInputForAction("index_pr_provider")
+	if prProviderName == "" {
+		prProviderName = providerName
+	}
 
-	logrus.Infof("index_repo_token provided, opening PR directly from CI using provider %q", providerName)
-	r, err := releaser.New(providerName, token)
+	logrus.Infof(
+		"index_repo_token provided, opening PR directly from CI using git provider %q and pr provider %q",
+		providerName,
+		prProviderName,
+	)
+	r, err := releaser.NewWithProviders(providerName, prProviderName, token)
 	if err != nil {
 		return "", err
 	}

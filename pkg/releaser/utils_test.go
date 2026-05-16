@@ -79,7 +79,7 @@ func TestOpenPullRequestRequiresBaseBranch(t *testing.T) {
 
 func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
 	r := &Releaser{
-		RepositoryProvider:          &gitHubRepositoryProvider{},
+		PRProvider:                  &gitHubPRProvider{},
 		UpstreamKrewIndexRepoOwner:  "acme",
 		UpstreamKrewIndexRepo:       "custom-index",
 		LocalKrewIndexRepoOwner:     "acme",
@@ -101,8 +101,15 @@ func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
 }
 
 func TestNewRejectsUnsupportedRepoProvider(t *testing.T) {
-	_, err := New("stash", "token")
-	if err == nil || err.Error() != `unsupported repo/pr provider "stash"` {
+	_, err := NewWithProviders("stash", ProviderGitHub, "token")
+	if err == nil || err.Error() != `unsupported git provider "stash"` {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestNewRejectsUnsupportedPRProvider(t *testing.T) {
+	_, err := NewWithProviders(ProviderGitHub, "stash", "token")
+	if err == nil || err.Error() != `unsupported pr provider "stash"` {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

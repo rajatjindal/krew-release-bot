@@ -3,7 +3,7 @@ package releaser
 import "testing"
 
 func TestGitHubProviderResolveCloneURL(t *testing.T) {
-	provider := &gitHubRepositoryProvider{}
+	provider := &gitHubGitProvider{}
 
 	testcases := []struct {
 		name      string
@@ -50,5 +50,30 @@ func TestGitHubProviderResolveCloneURL(t *testing.T) {
 				t.Fatalf("unexpected clone url: %s", actual)
 			}
 		})
+	}
+}
+
+func TestProviderRegistrationIsCaseInsensitive(t *testing.T) {
+	RegisterGitProvider("StashGit", func() GitProvider {
+		return &gitHubGitProvider{}
+	})
+	RegisterPRProvider("StashPR", func() PRProvider {
+		return &gitHubPRProvider{}
+	})
+
+	gitProvider, err := getGitProvider("stashgit")
+	if err != nil {
+		t.Fatalf("getGitProvider returned error: %v", err)
+	}
+	if gitProvider.Name() != ProviderGitHub {
+		t.Fatalf("unexpected git provider: %s", gitProvider.Name())
+	}
+
+	prProvider, err := getPRProvider("stashpr")
+	if err != nil {
+		t.Fatalf("getPRProvider returned error: %v", err)
+	}
+	if prProvider.Name() != ProviderGitHub {
+		t.Fatalf("unexpected pr provider: %s", prProvider.Name())
 	}
 }

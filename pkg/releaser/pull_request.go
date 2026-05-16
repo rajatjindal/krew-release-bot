@@ -42,11 +42,11 @@ func (r *Releaser) getBranchName(request *source.ReleaseRequest) string {
 
 func (r *Releaser) getHead(request *source.ReleaseRequest) string {
 	branchName := r.getBranchName(request)
-	if r.RepositoryProvider == nil {
+	if r.PRProvider == nil {
 		return fmt.Sprintf("%s:%s", r.TokenUserHandle, branchName)
 	}
 
-	return r.RepositoryProvider.FormatPullRequestHead(PullRequestHeadInput{
+	return r.PRProvider.FormatPullRequestHead(PullRequestHeadInput{
 		BranchName:        branchName,
 		LocalRepoOwner:    r.LocalKrewIndexRepoOwner,
 		LocalRepoName:     r.LocalKrewIndexRepo,
