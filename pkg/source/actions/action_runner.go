@@ -91,17 +91,34 @@ func RunAction() error {
 }
 
 func submitReleaseRequest(request *source.ReleaseRequest) (string, error) {
-	token := getInputForAction("krew_index_token")
+	token := getInputForAction("index_repo_token")
 	if token == "" {
-		if getInputForAction("krew_index_repo_owner") != "" || getInputForAction("krew_index_repo_name") != "" {
-			return "", fmt.Errorf("custom krew index repo requires krew_index_token so the PR can be opened directly from CI")
+		token = getInputForAction("krew_index_token")
+	}
+
+	if token == "" {
+		if getInputForAction("index_repo_owner") != "" ||
+			getInputForAction("index_repo_name") != "" ||
+			getInputForAction("index_repo_provider") != "" ||
+			getInputForAction("index_repo_clone_url") != "" ||
+			getInputForAction("krew_index_repo_owner") != "" ||
+			getInputForAction("krew_index_repo_name") != "" {
+			return "", fmt.Errorf("custom index repo configuration requires index_repo_token so the PR can be opened directly from CI")
 		}
 
 		return submitForPR(request)
 	}
 
-	logrus.Info("krew_index_token provided, opening PR directly from CI")
-	r := releaser.New(token)
+	providerName := getInputForAction("index_repo_provider")
+	if providerName == "" {
+		providerName = releaser.ProviderGitHub
+	}
+
+	logrus.Infof("index_repo_token provided, opening PR directly from CI using provider %q", providerName)
+	r, err := releaser.New(providerName, token)
+	if err != nil {
+		return "", err
+	}
 	r.ConfigureDirectPRs()
 	return r.Release(request)
 }

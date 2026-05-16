@@ -10,7 +10,10 @@ import (
 
 func main() {
 	ghToken := os.Getenv("GH_TOKEN")
-	releaser := releaser.New(ghToken)
+	releaser, err := releaser.New(releaser.ProviderGitHub, ghToken)
+	if err != nil {
+		panic(err)
+	}
 	handler := webhook.NewActionHandler(releaser)
 
 	lambda.Start(handler.HandleActionLambdaWebhook)

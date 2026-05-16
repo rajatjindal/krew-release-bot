@@ -98,3 +98,10 @@ func TestBuildPullRequestUsesLocalBranchNameForDirectMode(t *testing.T) {
 		t.Fatalf("unexpected direct-mode head: %s", pullRequest.Head)
 	}
 }
+
+func TestNewRejectsUnsupportedRepoProvider(t *testing.T) {
+	_, err := New("stash", "token")
+	if err == nil || err.Error() != `unsupported repo/pr provider "stash"` {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
