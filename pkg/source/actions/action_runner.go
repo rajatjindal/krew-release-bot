@@ -30,7 +30,10 @@ func getHTTPClient() *http.Client {
 
 // RunAction runs the github action
 func RunAction() error {
-	provider := cicd.GetProvider()
+	provider, err := cicd.GetProvider()
+	if err != nil {
+		return err
+	}
 
 	if provider == nil {
 		return fmt.Errorf("failed to identify the CI/CD provider")

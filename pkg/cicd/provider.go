@@ -1,6 +1,7 @@
 package cicd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd/circleci"
@@ -13,12 +14,8 @@ type ReleaseMetadataProvider interface {
 	GetTag() (string, error)
 	GetActor() (string, error)
 	GetOwnerAndRepo() (string, string, error)
-	GetTemplateFile() string
-}
-
-// WorkDirectoryProvider exposes the CI checkout directory when needed.
-type WorkDirectoryProvider interface {
 	GetWorkDirectory() string
+	GetTemplateFile() string
 }
 
 // PreReleaseChecker allows a CI provider to decide whether a release should be skipped.
@@ -29,7 +26,6 @@ type PreReleaseChecker interface {
 // Provider groups the CI capabilities used by the application.
 type Provider interface {
 	ReleaseMetadataProvider
-	WorkDirectoryProvider
 	PreReleaseChecker
 }
 
@@ -43,10 +39,8 @@ type Registration struct {
 	New    Factory
 }
 
-var providers []Registration
-
-func init() {
-	RegisterProvider(Registration{
+var builtInRegistrations = []Registration{
+	{
 		Name: "github-actions",
 		Detect: func() bool {
 			return os.Getenv("GITHUB_ACTIONS") == "true"
@@ -54,9 +48,8 @@ func init() {
 		New: func() Provider {
 			return &github.Actions{}
 		},
-	})
-
-	RegisterProvider(Registration{
+	},
+	{
 		Name: "circle-ci",
 		Detect: func() bool {
 			return os.Getenv("CIRCLECI") == "true"
@@ -64,9 +57,8 @@ func init() {
 		New: func() Provider {
 			return &circleci.Provider{}
 		},
-	})
-
-	RegisterProvider(Registration{
+	},
+	{
 		Name: "travis-ci",
 		Detect: func() bool {
 			return os.Getenv("TRAVIS") == "true"
@@ -74,25 +66,59 @@ func init() {
 		New: func() Provider {
 			return &travisci.Provider{}
 		},
-	})
+	},
+}
+
+// Registry manages provider registrations explicitly.
+type Registry struct {
+	providers []Registration
+}
+
+// NewRegistry constructs a registry from validated registrations.
+func NewRegistry(registrations ...Registration) (*Registry, error) {
+	registry := &Registry{}
+	for _, reg := range registrations {
+		if err := registry.RegisterProvider(reg); err != nil {
+			return nil, err
+		}
+	}
+
+	return registry, nil
 }
 
 // RegisterProvider makes a provider available for discovery.
-func RegisterProvider(reg Registration) {
-	if reg.Detect == nil || reg.New == nil {
-		return
+func (r *Registry) RegisterProvider(reg Registration) error {
+	if reg.Name == "" {
+		return fmt.Errorf("provider registration name is required")
+	}
+	if reg.Detect == nil {
+		return fmt.Errorf("provider registration %q is missing Detect", reg.Name)
+	}
+	if reg.New == nil {
+		return fmt.Errorf("provider registration %q is missing New", reg.Name)
 	}
 
-	providers = append(providers, reg)
+	r.providers = append(r.providers, reg)
+	return nil
 }
 
 // GetProvider returns the first CI/CD provider whose detection matches the environment.
-func GetProvider() Provider {
-	for _, provider := range providers {
+func (r *Registry) GetProvider() Provider {
+	for _, provider := range r.providers {
 		if provider.Detect() {
 			return provider.New()
 		}
 	}
 
 	return nil
+}
+
+// GetProvider returns the first built-in CI/CD provider whose detection matches the environment.
+func GetProvider() (Provider, error) {
+	registry, err := NewRegistry(builtInRegistrations...)
+	if err != nil {
+		return nil, err
+	}
+
+	return registry.GetProvider(), nil
 }
