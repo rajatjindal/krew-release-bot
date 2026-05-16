@@ -6,19 +6,6 @@ import (
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 )
 
-// PullRequest describes the data needed by a PR backend.
-type PullRequest struct {
-	Title string
-	Head  string
-	Base  string
-	Body  string
-}
-
-// PullRequestOpener opens pull requests against a remote provider.
-type PullRequestOpener interface {
-	Open(owner, repo string, pullRequest PullRequest) (string, error)
-}
-
 func (r *Releaser) buildPullRequest(request *source.ReleaseRequest) PullRequest {
 	return PullRequest{
 		Title: r.getTitle(request),

@@ -8,6 +8,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// PullRequest describes the data needed by a PR backend.
+type PullRequest struct {
+	Title string
+	Head  string
+	Base  string
+	Body  string
+}
+
+// PullRequestOpener opens pull requests against a remote provider.
+type PullRequestOpener interface {
+	Open(owner, repo string, pullRequest PullRequest) (string, error)
+}
+
 type githubPullRequestOpener struct {
 	token string
 }
