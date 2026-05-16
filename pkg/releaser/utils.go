@@ -48,7 +48,7 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 		return "", fmt.Errorf("failed when copying plugin spec with error: %s", err.Error())
 	}
 
-	logrus.Infof("pushing changes to branch %s", *releaser.getBranchName(request))
+	logrus.Infof("pushing changes to branch %s", releaser.getBranchName(request))
 	commit := commitConfig{
 		Msg:        fmt.Sprintf("new version %s of %s", request.TagName, request.PluginName),
 		RemoteName: OriginNameLocal,
@@ -60,12 +60,24 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 	}
 
 	logrus.Info("submitting the pr")
-	pr, err := releaser.submitPR(request)
+	pr, err := releaser.openPullRequest(request)
 	if err != nil {
 		return "", err
 	}
 
 	return pr, nil
+}
+
+func (releaser *Releaser) openPullRequest(request *source.ReleaseRequest) (string, error) {
+	if releaser.PullRequestOpener == nil {
+		return "", fmt.Errorf("no pull request opener configured")
+	}
+
+	return releaser.PullRequestOpener.Open(
+		releaser.UpstreamKrewIndexRepoOwner,
+		releaser.UpstreamKrewIndexRepo,
+		releaser.buildPullRequest(request),
+	)
 }
 
 func copyFile(src, dst string) (int64, error) {

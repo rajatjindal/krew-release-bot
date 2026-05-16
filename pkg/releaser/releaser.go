@@ -17,6 +17,7 @@ type Releaser struct {
 	TokenEmail                    string
 	TokenUserHandle               string
 	TokenUsername                 string
+	PullRequestOpener             PullRequestOpener
 	UpstreamKrewIndexRepo         string
 	UpstreamKrewIndexRepoOwner    string
 	UpstreamKrewIndexRepoCloneURL string
@@ -43,6 +44,7 @@ func New(ghToken string) *Releaser {
 		TokenEmail:                    tokenEmail,
 		TokenUserHandle:               tokenUserHandle,
 		TokenUsername:                 tokenUsername,
+		PullRequestOpener:             newGitHubPullRequestOpener(ghToken),
 		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
 		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
 		UpstreamKrewIndexRepoCloneURL: getCloneURL(krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName()),
