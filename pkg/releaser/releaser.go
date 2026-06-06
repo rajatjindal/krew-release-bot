@@ -7,54 +7,72 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/pkg/errors"
-	"github.com/rajatjindal/krew-release-bot/pkg/krew"
-	"github.com/rajatjindal/krew-release-bot/pkg/source/actions"
+	"github.com/rajatjindal/krew-release-bot/pkg/source"
 )
 
 // Releaser is what opens PR
 type Releaser struct {
-	Token                         string
-	TokenEmail                    string
-	TokenUserHandle               string
-	TokenUsername                 string
-	UpstreamKrewIndexRepo         string
-	UpstreamKrewIndexRepoOwner    string
-	UpstreamKrewIndexRepoCloneURL string
-	LocalKrewIndexRepo            string
-	LocalKrewIndexRepoOwner       string
-	LocalKrewIndexRepoCloneURL    string
+	Token           string
+	TokenEmail      string
+	TokenUserHandle string
+	TokenUsername   string
+	Config          IndexRepoConfig
+
+	forge Forge
 }
 
-func getCloneURL(owner, repo string) string {
-	return fmt.Sprintf("https://github.com/%s/%s.git", owner, repo)
+type releaseRunner interface {
+	Release(request *source.ReleaseRequest) (string, error)
 }
 
-// TODO: get email, userhandle, name from token
-func getUserDetails(_ string) (string, string, string) {
-	return "krew-release-bot", "Krew Release Bot", "krewpluginreleasebot@gmail.com"
+var newReleaseRunnerFromConfig = func(config IndexRepoConfig) (releaseRunner, error) {
+	return NewFromConfig(config)
 }
 
-// New returns new releaser object
-func New(ghToken string) *Releaser {
-	tokenUserHandle, tokenUsername, tokenEmail := getUserDetails(ghToken)
+func newReleaserFromConfig(config IndexRepoConfig) (*Releaser, error) {
+	forge, err := NewForge(
+		config.Upstream.ForgeKind,
+		config.Upstream.APIBaseURL,
+		config.Upstream.Auth.Token,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return newReleaserWithForge(forge, config)
+}
+
+func newReleaserWithForge(forge Forge, config IndexRepoConfig) (*Releaser, error) {
+	currentUser, err := forge.CurrentUser()
+	if err != nil {
+		return nil, err
+	}
 
 	return &Releaser{
-		Token:                         ghToken,
-		TokenEmail:                    tokenEmail,
-		TokenUserHandle:               tokenUserHandle,
-		TokenUsername:                 tokenUsername,
-		UpstreamKrewIndexRepo:         krew.GetKrewIndexRepoName(),
-		UpstreamKrewIndexRepoOwner:    krew.GetKrewIndexRepoOwner(),
-		UpstreamKrewIndexRepoCloneURL: getCloneURL(krew.GetKrewIndexRepoOwner(), krew.GetKrewIndexRepoName()),
-		LocalKrewIndexRepo:            krew.GetKrewIndexRepoName(),
-		LocalKrewIndexRepoOwner:       tokenUserHandle,
-		LocalKrewIndexRepoCloneURL:    "https://github.com/krew-release-bot/krew-index.git",
-	}
+		Token:           config.LocalPushTarget.Auth.Token,
+		TokenEmail:      currentUser.Email,
+		TokenUserHandle: currentUser.Handle,
+		TokenUsername:   currentUser.Name,
+		Config:          config,
+		forge:           forge,
+	}, nil
+}
+
+func NewFromConfig(config IndexRepoConfig) (*Releaser, error) {
+	return newReleaserFromConfig(config)
 }
 
 // HandleActionLambdaWebhook handles requests from github actions
-func (releaser *Releaser) HandleActionLambdaWebhook(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	hook, err := actions.NewGithubActions()
+func HandleActionLambdaWebhook(ctx context.Context, request events.APIGatewayProxyRequest, config IndexRepoConfig) (*events.APIGatewayProxyResponse, error) {
+	releaser, err := newReleaseRunnerFromConfig(config)
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       errors.Wrap(err, "failed to create releaser with the provided token").Error(),
+		}, nil
+	}
+
+	hook, err := NewGithubActions()
 	if err != nil {
 		return &events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -85,8 +103,14 @@ func (releaser *Releaser) HandleActionLambdaWebhook(ctx context.Context, request
 }
 
 // HandleActionWebhook handles requests from github actions
-func (releaser *Releaser) HandleActionWebhook(w http.ResponseWriter, r *http.Request) {
-	hook, err := actions.NewGithubActions()
+func HandleActionWebhook(w http.ResponseWriter, r *http.Request, config IndexRepoConfig) {
+	releaser, err := newReleaseRunnerFromConfig(config)
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "failed to create releaser with the provided token").Error(), http.StatusInternalServerError)
+		return
+	}
+
+	hook, err := NewGithubActions()
 	if err != nil {
 		http.Error(w, errors.Wrap(err, "creating instance of action handler").Error(), http.StatusInternalServerError)
 		return

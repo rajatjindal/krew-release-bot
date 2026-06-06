@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/google/go-github/v66/github"
@@ -108,16 +107,6 @@ func (p *Actions) GetWorkDirectory() string {
 	}
 
 	return os.Getenv("GITHUB_WORKSPACE")
-}
-
-// GetTemplateFile returns the template file
-func (p *Actions) GetTemplateFile() string {
-	templateFile := getInputForAction("krew_template_file")
-	if templateFile != "" {
-		return filepath.Join(p.GetWorkDirectory(), templateFile)
-	}
-
-	return filepath.Join(p.GetWorkDirectory(), ".krew.yaml")
 }
 
 func getHTTPClient() *http.Client {

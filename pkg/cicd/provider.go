@@ -14,7 +14,6 @@ type Provider interface {
 	GetActor() (string, error)
 	GetOwnerAndRepo() (string, string, error)
 	GetWorkDirectory() string
-	GetTemplateFile() string
 	IsPreRelease(owner, repo, tag string) (bool, error)
 }
 

@@ -1,17 +1,13 @@
 package releaser
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/google/go-github/v66/github"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
-	ugit "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -28,32 +24,37 @@ const (
 )
 
 // CloneRepos clones the repo
-func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit.Repository, error) {
-	logrus.Infof("Cloning %s", r.UpstreamKrewIndexRepoCloneURL)
-	repo, err := ugit.PlainClone(dir, false, &ugit.CloneOptions{
-		URL:           r.UpstreamKrewIndexRepoCloneURL,
+func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*git.Repository, error) {
+	logrus.Infof("Cloning %s", r.Config.Upstream.GitCloneURL)
+	defaultBranch, err := r.getBaseBranch()
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
+		URL:           r.Config.Upstream.GitCloneURL,
 		Progress:      os.Stdout,
-		ReferenceName: plumbing.Master,
+		ReferenceName: getBranchReferenceName(defaultBranch),
 		SingleBranch:  true,
-		Auth:          r.getAuth(),
+		Auth:          r.getAuth(r.Config.Upstream.Auth),
 		RemoteName:    OriginNameUpstream,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	logrus.Infof("Adding remote %s at %s", OriginNameLocal, r.LocalKrewIndexRepoCloneURL)
+	logrus.Infof("Adding remote %s at %s", OriginNameLocal, r.Config.LocalPushTarget.GitCloneURL)
 	_, err = repo.CreateRemote(&config.RemoteConfig{
 		Name: OriginNameLocal,
-		URLs: []string{r.LocalKrewIndexRepoCloneURL},
+		URLs: []string{r.Config.LocalPushTarget.GitCloneURL},
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	branchName := r.getBranchName(request)
-	logrus.Infof("creating branch %s", *branchName)
-	err = r.createBranch(repo, *branchName)
+	logrus.Infof("creating branch %s", branchName)
+	err = r.createBranch(repo, branchName)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (r *Releaser) cloneRepos(dir string, request *source.ReleaseRequest) (*ugit
 }
 
 // CreateBranch creates branch
-func (r *Releaser) createBranch(repo *ugit.Repository, branchName string) error {
+func (r *Releaser) createBranch(repo *git.Repository, branchName string) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -93,8 +94,8 @@ type commitConfig struct {
 	RemoteName string
 }
 
-// AddCommitAndPush commits and push
-func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, request *source.ReleaseRequest) error {
+// addCommit creates the local commit for the manifest update.
+func (r *Releaser) addCommit(repo *git.Repository, commit commitConfig) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -116,13 +117,18 @@ func (r *Releaser) addCommitAndPush(repo *ugit.Repository, commit commitConfig, 
 		return err
 	}
 
-	branchName := r.getBranchName(request)
-	pushRef := getPushRefSpec(*branchName)
+	return nil
+}
 
-	return repo.Push(&ugit.PushOptions{
+// pushCommit pushes the created commit to the configured remote branch.
+func (r *Releaser) pushCommit(repo *git.Repository, commit commitConfig, request *source.ReleaseRequest) error {
+	branchName := r.getBranchName(request)
+	pushRef := getPushRefSpec(branchName)
+
+	return repo.Push(&git.PushOptions{
 		RemoteName: commit.RemoteName,
 		RefSpecs:   []config.RefSpec{config.RefSpec(pushRef)},
-		Auth:       r.getAuth(),
+		Auth:       r.getAuth(r.Config.LocalPushTarget.Auth),
 	})
 }
 
@@ -130,63 +136,50 @@ func getPushRefSpec(branchName string) string {
 	return fmt.Sprintf("refs/heads/%s:refs/heads/%s", branchName, branchName)
 }
 
-// SubmitPR submits the PR
-func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: r.Token})
-	tc := oauth2.NewClient(context.TODO(), ts)
-	client := github.NewClient(tc)
-
-	prr := &github.NewPullRequest{
-		Title: r.getTitle(request),
-		Head:  r.getHead(request),
-		Base:  github.String("master"),
-		Body:  r.getPRBody(request),
+func getBranchReferenceName(branch string) plumbing.ReferenceName {
+	if plumbing.ReferenceName(branch).IsBranch() {
+		return plumbing.ReferenceName(branch)
 	}
 
-	logrus.Infof("creating pr with title %q, \nhead %q, \nbase %q, \nbody %q",
-		github.Stringify(r.getTitle(request)),
-		github.Stringify(r.getHead(request)),
-		"master",
-		github.Stringify(r.getPRBody(request)),
-	)
+	return plumbing.NewBranchReferenceName(branch)
+}
 
-	pr, _, err := client.PullRequests.Create(
-		context.TODO(),
-		r.UpstreamKrewIndexRepoOwner,
-		r.UpstreamKrewIndexRepo,
-		prr,
-	)
+// SubmitPR submits the PR
+func (r *Releaser) submitPR(request *source.ReleaseRequest) (string, error) {
+	defaultBranch, err := r.getBaseBranch()
 	if err != nil {
 		return "", err
 	}
 
-	logrus.Infof("pr %q opened for releasing new version", pr.GetHTMLURL())
-	return pr.GetHTMLURL(), nil
+	logrus.Infof("creating pr with title %q, \nhead branch %q, \nbase %q, \nbody %q",
+		r.getTitle(request),
+		r.getBranchName(request),
+		defaultBranch,
+		r.getPRBody(request),
+	)
+
+	pr, err := r.openPullRequest(request, defaultBranch)
+	if err != nil {
+		return "", err
+	}
+
+	logrus.Infof("pr %q opened for releasing new version", pr)
+	return pr, nil
 }
 
-func (r *Releaser) getTitle(request *source.ReleaseRequest) *string {
-	s := fmt.Sprintf(
+func (r *Releaser) getTitle(request *source.ReleaseRequest) string {
+	return fmt.Sprintf(
 		"release new version %s of %s",
 		request.TagName,
 		request.PluginName,
 	)
-
-	return github.String(s)
 }
 
-func (r *Releaser) getBranchName(request *source.ReleaseRequest) *string {
-	s := fmt.Sprintf("%s-%s-%s-%s", request.PluginOwner, request.PluginName, request.PluginRepo, request.TagName)
-	fmt.Printf("creating branch %s", s)
-	return github.String(s)
+func (r *Releaser) getBranchName(request *source.ReleaseRequest) string {
+	return fmt.Sprintf("%s-%s-%s-%s", request.PluginOwner, request.PluginName, request.PluginRepo, request.TagName)
 }
 
-func (r *Releaser) getHead(request *source.ReleaseRequest) *string {
-	branchName := r.getBranchName(request)
-	s := fmt.Sprintf("%s:%s", r.TokenUserHandle, *branchName)
-	return github.String(s)
-}
-
-func (r *Releaser) getPRBody(request *source.ReleaseRequest) *string {
+func (r *Releaser) getPRBody(request *source.ReleaseRequest) string {
 	prBody := `hey krew-index team,
 
 I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I would like to open this PR to publish version %s of %s on behalf of @%s.
@@ -194,18 +187,24 @@ I am [krew-release-bot](https://github.com/rajatjindal/krew-release-bot), and I 
 Thanks,
 @krew-release-bot`
 
-	s := fmt.Sprintf(prBody,
+	return fmt.Sprintf(prBody,
 		fmt.Sprintf("`%s`", request.TagName),
 		fmt.Sprintf("`%s`", request.PluginName),
 		request.PluginReleaseActor,
 	)
-
-	return github.String(s)
 }
 
-func (r *Releaser) getAuth() transport.AuthMethod {
+func (r *Releaser) getBaseBranch() (string, error) {
+	if r.Config.BaseBranchOverride != "" {
+		return r.Config.BaseBranchOverride, nil
+	}
+
+	return r.forge.RepoDefaultBranch(r.Config.Upstream.Repo)
+}
+
+func (r *Releaser) getAuth(authConfig AuthConfig) transport.AuthMethod {
 	return &githttp.BasicAuth{
 		Username: r.TokenUserHandle,
-		Password: r.Token,
+		Password: authConfig.Token,
 	}
 }

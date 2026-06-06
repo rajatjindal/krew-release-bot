@@ -1,15 +1,16 @@
 package main
 
 import (
-	"os"
+	"context"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
 )
 
 func main() {
-	ghToken := os.Getenv("GH_TOKEN")
-	releaser := releaser.New(ghToken)
-
-	lambda.Start(releaser.HandleActionLambdaWebhook)
+	config := getIndexRepoConfigFromEnv()
+	lambda.Start(func(ctx context.Context, request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+		return releaser.HandleActionLambdaWebhook(ctx, request, config)
+	})
 }

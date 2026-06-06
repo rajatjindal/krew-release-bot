@@ -74,6 +74,8 @@ $ docker run -v /path/to/your/template-file.yaml:/tmp/template-file.yaml ghcr.io
 | ------------------ | ---------------------- | ------------------------------------------------------------------------------------ |
 | workdir            | `env.GITHUB_WORKSPACE` | Overrides the GitHub workspace directory path                                        |
 | krew_template_file | `.krew.yaml`           | The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml |
+| upstream_krew_index_repo_url | `https://github.com/kubernetes-sigs/krew-index.git` | Upstream repo URL when `submit_pr_locally` is true |
+| local_krew_index_repo_url | `https://github.com/krew-release-bot/krew-index.git` | Fork/push target repo URL when `submit_pr_locally` is true |
 
 # Limitations of krew-release-bot
 

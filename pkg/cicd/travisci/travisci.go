@@ -3,7 +3,6 @@ package travisci
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -72,14 +71,4 @@ func (p *Provider) GetWorkDirectory() string {
 	}
 
 	return os.Getenv("TRAVIS_BUILD_DIR")
-}
-
-// GetTemplateFile returns the template file
-func (p *Provider) GetTemplateFile() string {
-	templateFile := getInputForAction("krew_template_file")
-	if templateFile != "" {
-		return filepath.Join(p.GetWorkDirectory(), templateFile)
-	}
-
-	return filepath.Join(p.GetWorkDirectory(), ".krew.yaml")
 }
