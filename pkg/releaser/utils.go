@@ -17,7 +17,9 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 	if err != nil {
 		return "", err
 	}
-	defer os.RemoveAll(tempdir)
+	if !releaser.Config.DryRun {
+		defer os.RemoveAll(tempdir)
+	}
 
 	logrus.Infof("will operate in tempdir %s", tempdir)
 	repo, err := releaser.cloneRepos(tempdir, request)
@@ -48,13 +50,25 @@ func (releaser *Releaser) Release(request *source.ReleaseRequest) (string, error
 		return "", fmt.Errorf("failed when copying plugin spec with error: %s", err.Error())
 	}
 
-	logrus.Infof("pushing changes to branch %s", *releaser.getBranchName(request))
 	commit := commitConfig{
 		Msg:        fmt.Sprintf("new version %s of %s", request.TagName, request.PluginName),
 		RemoteName: OriginNameLocal,
 	}
 
-	err = releaser.addCommitAndPush(repo, commit, request)
+	err = releaser.addCommit(repo, commit)
+	if err != nil {
+		return "", err
+	}
+
+	if releaser.Config.DryRun {
+		logrus.Infof("dry run enabled, leaving tempdir intact for inspection: %s", tempdir)
+		logrus.Info("dry run enabled, skipping git push and pull request creation")
+		return fmt.Sprintf("dry-run: manifest validated, branch created, and commit written locally at %s; skipped push and PR creation", tempdir), nil
+	}
+
+	logrus.Infof("pushing changes to branch %s", releaser.getBranchName(request))
+
+	err = releaser.pushCommit(repo, commit, request)
 	if err != nil {
 		return "", err
 	}

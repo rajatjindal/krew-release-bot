@@ -11,10 +11,19 @@ import (
 	"time"
 
 	"github.com/rajatjindal/krew-release-bot/pkg/cicd"
+	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
 	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
+
+type releaseRunner interface {
+	Release(request *source.ReleaseRequest) (string, error)
+}
+
+var newReleaseRunnerFromConfig = func(config releaser.IndexRepoConfig) (releaseRunner, error) {
+	return releaser.NewFromConfig(config)
+}
 
 func getHTTPClient() *http.Client {
 	if os.Getenv("GITHUB_TOKEN") != "" {
@@ -60,7 +69,7 @@ func RunAction() error {
 		return fmt.Errorf("release with tag %q is a pre-release. skipping", tag)
 	}
 
-	templateFile := provider.GetTemplateFile()
+	templateFile := getTemplateFile(provider.GetWorkDirectory())
 	logrus.Infof("using template file %q", templateFile)
 
 	releaseRequest := &source.ReleaseRequest{
@@ -79,6 +88,34 @@ func RunAction() error {
 	releaseRequest.PluginName = pluginName
 	releaseRequest.ProcessedTemplate = pluginManifest
 
+	// if user requested to submit PR via actions itself
+	if shouldSubmitPRLocally() {
+		rel, err := newReleaseRunnerFromConfig(getIndexRepoConfig())
+		if err != nil {
+			return err
+		}
+
+		pr, err := rel.Release(releaseRequest)
+		if err != nil {
+			return err
+		}
+
+		logrus.Info(pr)
+		return nil
+	}
+
+	if shouldDryRun() {
+		body, err := getWebhookRequestBody(releaseRequest)
+		if err != nil {
+			return err
+		}
+
+		logrus.Infof("webhook dry-run enabled, decoded request body:\n%s", string(body))
+		logrus.Info("webhook dry-run enabled, skipping webhook request")
+		return nil
+	}
+
+	// submit PR via webhook as always
 	pr, err := submitForPR(releaseRequest)
 	if err != nil {
 		return err
@@ -88,8 +125,17 @@ func RunAction() error {
 	return nil
 }
 
-func submitForPR(request *source.ReleaseRequest) (string, error) {
+func getWebhookRequestBody(request *source.ReleaseRequest) ([]byte, error) {
 	body, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func submitForPR(request *source.ReleaseRequest) (string, error) {
+	body, err := getWebhookRequestBody(request)
 	if err != nil {
 		return "", err
 	}

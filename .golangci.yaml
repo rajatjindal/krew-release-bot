@@ -1,0 +1,106 @@
+## copied over from https://github.com/spinframework/spin-operator/blob/main/.golangci.yaml
+version: "2"
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - depguard
+    - errcheck
+    - errorlint
+    - forbidigo
+    - goconst
+    - gocyclo
+    - gosec
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+  settings:
+    depguard:
+      rules:
+        main:
+          files:
+            - $all
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: 'use Go 1.13 errors instead: https://blog.golang.org/go1.13-errors'
+        testing:
+          files:
+            - $test
+          deny:
+            - pkg: github.com/stretchr/testify/assert
+              desc: use github.com/stretchr/testify/require instead
+    dupl:
+      threshold: 100
+    forbidigo:
+      forbid:
+        - pattern: ^print.*$
+        - pattern: ^fmt\.Print.*$
+          msg: Do not commit print statements.
+        - pattern: ^os\.Getenv
+          msg: Pull values through configuration rather than os.Getenv
+    goconst:
+      min-len: 8
+      min-occurrences: 10
+    gocyclo:
+      min-complexity: 15
+    govet:
+      disable:
+        - shadow
+    lll:
+      line-length: 180
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - gosec
+        text: G104
+      - linters:
+          - staticcheck
+        text: SA5001
+      - linters:
+          - staticcheck
+        text: QF1008
+      - linters:
+          - golint
+        text: should have( a package)? comment
+      - linters:
+          - lll
+        source: https?://
+      - linters:
+          - lll
+        source: '^//go:generate '
+      - linters:
+          - errcheck
+        source: ^\s*defer .*\.Close(.*)$
+      - linters:
+          - ineffassign
+        source: ^\s*ctx.*=.*$
+      - linters:
+          - staticcheck
+        source: ^\s*ctx.*=.*$
+      - linters:
+          - staticcheck
+        text: ST1000
+      - linters:
+          - unparam
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

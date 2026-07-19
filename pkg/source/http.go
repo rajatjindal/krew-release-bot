@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const (
+var (
 	maxRetries   = 4
 	retryWaitMin = 2 * time.Second
 	retryWaitMax = 10 * time.Second
@@ -40,6 +40,10 @@ func getWithRetry(uri string) (*http.Response, error) {
 }
 
 func checkRetry(resp *http.Response, _ error) bool {
+	if resp == nil {
+		return false
+	}
+
 	return resp.StatusCode == http.StatusNotFound
 }
 
@@ -55,4 +59,20 @@ func backoff(min, max time.Duration, attemptNum int) time.Duration {
 		sleep = max
 	}
 	return sleep
+}
+
+func SetRetryOptionsForTest(retries int, minWait, maxWait time.Duration) func() {
+	previousRetries := maxRetries
+	previousMin := retryWaitMin
+	previousMax := retryWaitMax
+
+	maxRetries = retries
+	retryWaitMin = minWait
+	retryWaitMax = maxWait
+
+	return func() {
+		maxRetries = previousRetries
+		retryWaitMin = previousMin
+		retryWaitMax = previousMax
+	}
 }

@@ -2,12 +2,25 @@ package actions
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/rajatjindal/krew-release-bot/pkg/releaser"
+	"github.com/rajatjindal/krew-release-bot/pkg/source"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/h2non/gock.v1"
 )
+
+type fakeReleaseRunner struct {
+	releaseFunc func(request *source.ReleaseRequest) (string, error)
+}
+
+func (f *fakeReleaseRunner) Release(request *source.ReleaseRequest) (string, error) {
+	return f.releaseFunc(request)
+}
 
 func assertError(t *testing.T, expectedError string, err error) {
 	if expectedError == "" {
@@ -23,6 +36,9 @@ func assertError(t *testing.T, expectedError string, err error) {
 }
 
 func TestRunAction(t *testing.T) {
+	restoreRetryOptions := source.SetRetryOptionsForTest(4, time.Millisecond, time.Millisecond)
+	defer restoreRetryOptions()
+
 	testcases := []struct {
 		name          string
 		setup         func()
@@ -144,6 +160,134 @@ func TestRunAction(t *testing.T) {
 	}
 }
 
+func TestRunActionSubmitPRLocallyHappyPath(t *testing.T) {
+	gock.OffAll()
+	os.Clearenv()
+
+	workdir := t.TempDir()
+	templatePath := filepath.Join(workdir, "plugin.yaml")
+	require.NoError(t, os.WriteFile(templatePath, []byte(validPluginManifest), 0644))
+
+	os.Setenv("CIRCLECI", "true")
+	os.Setenv("CIRCLE_TAG", "v1.2.3")
+	os.Setenv("CIRCLE_PROJECT_USERNAME", "foo-bar")
+	os.Setenv("CIRCLE_PROJECT_REPONAME", "my-awesome-plugin")
+	os.Setenv("CIRCLE_USERNAME", "release-user")
+	os.Setenv("INPUT_WORKDIR", workdir)
+	os.Setenv("INPUT_KREW_TEMPLATE_FILE", "plugin.yaml")
+	os.Setenv("INPUT_SUBMIT_PR_LOCALLY", "true")
+	os.Setenv("INPUT_UPSTREAM_KREW_INDEX_REPO_URL", "git@github.example:org/platform/custom-index.git")
+	os.Setenv("INPUT_LOCAL_KREW_INDEX_REPO_URL", "https://gitlab.example/mirror-group/team/mirror-index.git")
+	os.Setenv("GITHUB_TOKEN", "token-123")
+
+	originalFactory := newReleaseRunnerFromConfig
+	defer func() { newReleaseRunnerFromConfig = originalFactory }()
+
+	var capturedConfig releaser.IndexRepoConfig
+	var capturedRequest *source.ReleaseRequest
+	newReleaseRunnerFromConfig = func(config releaser.IndexRepoConfig) (releaseRunner, error) {
+		capturedConfig = config
+		return &fakeReleaseRunner{
+			releaseFunc: func(request *source.ReleaseRequest) (string, error) {
+				capturedRequest = request
+				return "https://example.test/pr/123", nil
+			},
+		}, nil
+	}
+
+	err := RunAction()
+	require.NoError(t, err)
+
+	require.NotNil(t, capturedRequest)
+	assert.Equal(t, "v1.2.3", capturedRequest.TagName)
+	assert.Equal(t, "foo-bar", capturedRequest.PluginOwner)
+	assert.Equal(t, "my-awesome-plugin", capturedRequest.PluginRepo)
+	assert.Equal(t, "release-user", capturedRequest.PluginReleaseActor)
+	assert.Equal(t, "whoami", capturedRequest.PluginName)
+	assert.NotEmpty(t, capturedRequest.ProcessedTemplate)
+
+	assert.Equal(t, releaser.ForgeKindGitHub, capturedConfig.Upstream.ForgeKind)
+	assert.Equal(t, "org/platform/custom-index", capturedConfig.Upstream.Repo.FullPath())
+	assert.Equal(t, "git@github.example:org/platform/custom-index.git", capturedConfig.Upstream.GitCloneURL)
+	assert.Equal(t, "mirror-group/team/mirror-index", capturedConfig.LocalPushTarget.Repo.FullPath())
+	assert.Equal(t, "https://gitlab.example/mirror-group/team/mirror-index.git", capturedConfig.LocalPushTarget.GitCloneURL)
+	assert.Equal(t, "token-123", capturedConfig.Upstream.Auth.Token)
+	assert.Equal(t, "token-123", capturedConfig.LocalPushTarget.Auth.Token)
+	assert.False(t, capturedConfig.DryRun)
+}
+
+func TestRunActionSubmitPRLocallyDryRun(t *testing.T) {
+	gock.OffAll()
+	os.Clearenv()
+
+	workdir := t.TempDir()
+	templatePath := filepath.Join(workdir, "plugin.yaml")
+	require.NoError(t, os.WriteFile(templatePath, []byte(validPluginManifest), 0644))
+
+	os.Setenv("CIRCLECI", "true")
+	os.Setenv("CIRCLE_TAG", "v1.2.3")
+	os.Setenv("CIRCLE_PROJECT_USERNAME", "foo-bar")
+	os.Setenv("CIRCLE_PROJECT_REPONAME", "my-awesome-plugin")
+	os.Setenv("CIRCLE_USERNAME", "release-user")
+	os.Setenv("INPUT_WORKDIR", workdir)
+	os.Setenv("INPUT_KREW_TEMPLATE_FILE", "plugin.yaml")
+	os.Setenv("INPUT_SUBMIT_PR_LOCALLY", "true")
+	os.Setenv("INPUT_DRY_RUN", "true")
+	os.Setenv("GITHUB_TOKEN", "token-123")
+
+	originalFactory := newReleaseRunnerFromConfig
+	defer func() { newReleaseRunnerFromConfig = originalFactory }()
+
+	var capturedConfig releaser.IndexRepoConfig
+	var capturedRequest *source.ReleaseRequest
+	newReleaseRunnerFromConfig = func(config releaser.IndexRepoConfig) (releaseRunner, error) {
+		capturedConfig = config
+		return &fakeReleaseRunner{
+			releaseFunc: func(request *source.ReleaseRequest) (string, error) {
+				capturedRequest = request
+				return "dry-run", nil
+			},
+		}, nil
+	}
+
+	err := RunAction()
+	require.NoError(t, err)
+
+	require.NotNil(t, capturedRequest)
+	assert.Equal(t, "whoami", capturedRequest.PluginName)
+	assert.True(t, capturedConfig.DryRun)
+}
+
+func TestRunActionWebhookDryRun(t *testing.T) {
+	restoreRetryOptions := source.SetRetryOptionsForTest(4, time.Millisecond, time.Millisecond)
+	defer restoreRetryOptions()
+
+	gock.DisableNetworking()
+	defer gock.OffAll()
+
+	os.Clearenv()
+	setupEnvironment()
+	os.Setenv("INPUT_DRY_RUN", "true")
+
+	gock.New("https://api.github.com").
+		Get("/repos/foo-bar/my-awesome-plugin/releases/tags/v0.0.2").
+		Reply(200).
+		BodyString(releaseWithAssets)
+
+	gock.New("https://github.com").
+		Get("/foo-bar/my-awesome-plugin/releases/download/v0.0.2/darwin-amd64-v0.0.2.tar.gz").
+		Reply(200).
+		BodyString("darwin-amd64-v0.0.2.tar.gz")
+
+	gock.New("https://github.com").
+		Get("/foo-bar/my-awesome-plugin/releases/download/v0.0.2/linux-amd64-v0.0.2.tar.gz").
+		Reply(200).
+		BodyString("linux-amd64")
+
+	err := RunAction()
+	require.NoError(t, err)
+}
+
 const preRelease = `{
 	"id": 22569944,
 	"tag_name": "v0.0.2",
@@ -177,3 +321,26 @@ func setupEnvironment() {
 	os.Setenv("GITHUB_WORKSPACE", "./data/")
 	os.Setenv("GITHUB_ACTIONS", "true")
 }
+
+const validPluginManifest = `apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: whoami
+spec:
+  version: v0.0.6
+  homepage: https://github.com/rajatjindal/kubectl-whoami
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    uri: https://github.com/rajatjindal/kubectl-whoami/releases/download/v0.0.6/darwin-amd64-v0.0.6.tar.gz
+    sha256: f31e2237fdfd18467d8b5a391cb31f9fab70e9ef104e8618916025daa50489d5
+    files:
+    - from: "*"
+      to: "."
+    bin: kubectl-whoami
+  shortDescription: Show the subject that's currently authenticated as.
+  description: |
+    This plugin show the subject that's currently authenticated as.
+`

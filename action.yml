@@ -8,6 +8,17 @@ inputs:
   workdir:
     description: "Working directory, defaults to env.GITHUB_WORKSPACE"
   krew_template_file:
-    description: "the path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
+    description: "The path to template file relative to $workdir. e.g. templates/misc/plugin-name.yaml. defaults to .krew.yaml"
   krew_plugin_release_tag:
     description: "The tag to use as version for krew plugin release. e.g. 'v5.0.0'. Defaults to parsing GITHUB_REF"
+  submit_pr_locally:
+    description: "If true, submit the PR from action execution itself instead of submitting through the webhook. Useful for custom krew-index"
+    default: false
+  upstream_krew_index_repo_url:
+    description: "Git repo URL for the upstream krew index. Defaults to https://github.com/kubernetes-sigs/krew-index.git. Only used if submit_pr_locally is true"
+  local_krew_index_repo_url:
+    description: "Git repo URL for the fork/push target. Defaults to https://github.com/krew-release-bot/krew-index.git. Only used if submit_pr_locally is true"
+  dry_run:
+    description: "If true with submit_pr_locally, perform clone/render/validate/update locally but skip push and PR creation"
+    default: false
+
